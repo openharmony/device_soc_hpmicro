@@ -1,0 +1,59 @@
+# Copyright (c) 2022 HPMicro.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//kernel/liteos_m/liteos.gni")
+
+module_name = get_path_info(rebase_path("."), "name")
+module_switch = defined(LOSCFG_SOC_SERIES_HPM6700)
+hpm_sdk_path = "//device/soc/hpmicro/hpm_sdk"
+kernel_module(module_name) {
+  include_dirs = [ 
+  
+  ]
+
+  sources = [ 
+    "${hpm_sdk_path}/drivers/src/hpm_uart_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_gpio_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_mchtmr_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_pmp_drv.c",
+  ]
+  
+  if (defined(LOSCFG_SOC_HPM6750)) {
+    sources += [
+      "${hpm_sdk_path}/soc/HPM6750/toolchains/reset.c",
+      "${hpm_sdk_path}/soc/HPM6750/boot/hpm_bootheader.c",
+      "${hpm_sdk_path}/soc/HPM6750/hpm_sysctl_drv.c",
+      "${hpm_sdk_path}/soc/HPM6750/system.c",
+      "${hpm_sdk_path}/soc/HPM6750/hpm_l1c_drv.c",
+      "${hpm_sdk_path}/soc/HPM6750/hpm_otp_drv.c",
+      "${hpm_sdk_path}/soc/HPM6750/hpm_clock_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_pllctl_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_can_drv.c",
+    ]
+  }
+}
+
+config("public") {
+  include_dirs = [
+    "${hpm_sdk_path}/drivers/inc",
+    "${hpm_sdk_path}/soc/ip",
+    "${hpm_sdk_path}/arch",
+  ]
+
+  if (defined(LOSCFG_SOC_HPM6750)) {
+    include_dirs += [ 
+        "${hpm_sdk_path}/soc/HPM6750",
+        "${hpm_sdk_path}/soc/HPM6750/boot",
+    ]
+  }
+}
