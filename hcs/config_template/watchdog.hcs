@@ -1,0 +1,9 @@
+root {
+    platform {
+        template config_watchdog {
+            match_attr = "";
+            id = 0;
+        }
+    }
+}
+

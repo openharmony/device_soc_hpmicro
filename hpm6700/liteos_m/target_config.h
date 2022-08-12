@@ -96,8 +96,6 @@ extern UINTPTR __heap_size;
 
 #define LOSCFG_KERNEL_PRINTF                                1
 
-#define LOSCFG_KERNEL_PM                                    0
-
 #define LOS_KERNEL_TEST_NOT_SMOKE                           0
 #define LOS_KERNEL_HWI_TEST                                 0
 
