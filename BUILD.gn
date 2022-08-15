@@ -17,6 +17,7 @@ if (ohos_kernel_type == "liteos_m") {
   module_group(module_name) {
     modules = [
       "drivers",
+      "sdk"
     ]
 
     if (defined(LOSCFG_SOC_SERIES_HPM6700)) {

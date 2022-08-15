@@ -14,8 +14,8 @@
 import("//kernel/liteos_m/liteos.gni")
 
 module_name = get_path_info(rebase_path("."), "name")
-module_switch = defined(LOSCFG_SOC_SERIES_HPM6700)
-hpm_sdk_path = "//device/soc/hpmicro/hpm_sdk"
+module_switch = true
+hpm_sdk_path = "//device/soc/hpmicro/sdk/hpm_sdk"
 kernel_module(module_name) {
   include_dirs = [ 
   
