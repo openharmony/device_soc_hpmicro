@@ -15,7 +15,9 @@ if (ohos_kernel_type == "liteos_m") {
   import("//kernel/liteos_m/liteos.gni")
   module_name = get_path_info(rebase_path("."), "name")
   module_group(module_name) {
-    modules = [ ]
+    modules = [
+      "drivers",
+    ]
 
     if (defined(LOSCFG_SOC_SERIES_HPM6700)) {
       modules += [ "hpm6700" ]
@@ -28,7 +30,5 @@ if (ohos_kernel_type == "liteos_m") {
     if (defined(LOSCFG_SOC_SERIES_HPM6300)) {
       modules += [ "hpm6300" ]
     }
-
-    modules += [ "drivers" ]
   }
 }

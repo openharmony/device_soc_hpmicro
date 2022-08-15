@@ -13,6 +13,7 @@
 #include "hdf_log.h"
 #include "watchdog_if.h"
 #include "watchdog_core.h"
+#include "hpm_wdg_drv.h"
 
 #define HDF_LOG_TAG HPMICRO_WATCHDOG_HDF
 
@@ -30,9 +31,12 @@ static int32_t WatchdogDriverInit(struct HdfDeviceObject *device)
     struct DeviceResourceIface *dri = DeviceResourceGetIfaceInstance(HDF_CONFIG_SOURCE);
 
     uint32_t id_value = 0;
+    uint32_t base;
     dri->GetUint32(device->property, "id", &id_value, 0);
+    dri->GetUint32(device->property, "base", &base, 0);
 
     HDF_LOGI("id = %u\n", id_value);
+    HDF_LOGI("base = 0x%X\n", base);
     return ret;
 }
 
