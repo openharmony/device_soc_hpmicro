@@ -35,7 +35,7 @@ extern "C" {
                                         System clock module configuration
 =============================================================================*/
 #define OS_SYS_CLOCK                                        24000000UL
-#define LOSCFG_BASE_CORE_TICK_PER_SECOND                    (100UL)
+#define LOSCFG_BASE_CORE_TICK_PER_SECOND                    (1000UL)
 #define LOSCFG_BASE_CORE_TICK_WTIMER                        1
 #define LOSCFG_BASE_CORE_TICK_RESPONSE_MAX                  ((UINT64)-1)
 

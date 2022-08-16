@@ -26,6 +26,8 @@ kernel_module(module_name) {
     "${hpm_sdk_path}/drivers/src/hpm_gpio_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_mchtmr_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_pmp_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_can_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
   ]
   
   if (defined(LOSCFG_SOC_HPM6750)) {
@@ -38,8 +40,6 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/soc/HPM6750/hpm_otp_drv.c",
       "${hpm_sdk_path}/soc/HPM6750/hpm_clock_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pllctl_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_can_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
     ]
   }
 }
