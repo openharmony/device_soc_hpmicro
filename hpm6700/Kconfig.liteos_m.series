@@ -13,9 +13,7 @@
 
 config SOC_SERIES_HPM6700
     bool "HPMicro HPM6700 Series"
-    #select ARM
     select SOC_COMPANY_HPMICRO
-    #select CPU_CORTEX_M4
     help
         Enable support for HPM6700
 

@@ -11,4 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+config SOC_COMPANY_HPMICRO
+    bool
+    default false
+    
+config SOC_COMPANY
+    string 
+    default "hpmicro"
+    depends on SOC_COMPANY_HPMICRO
+
 rsource "*/Kconfig.liteos_m.defconfig.series"
