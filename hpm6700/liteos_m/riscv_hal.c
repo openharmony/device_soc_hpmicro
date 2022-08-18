@@ -90,6 +90,11 @@ VOID HalPlicInit(VOID)
     HalIrqEnable(RISCV_MACH_EXT_IRQ);
 }
 
+HwiControllerOps g_archHwiOps = {
+    .disableIrq = HalIrqDisable,
+    .enableIrq = HalIrqEnable,
+    .setIrqPriority = HalSetLocalInterPri,
+};
 
 
 #ifdef __cplusplus
