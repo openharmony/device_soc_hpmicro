@@ -1,2 +1,3 @@
 #include "../config_template/watchdog.hcs"
+#include "../config_template/gpio.hcs"
 
