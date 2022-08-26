@@ -53,7 +53,7 @@ int __wrap_printf(char const  *fmt, ...)
 int printf(char const  *fmt, ...)
 #endif /* LOSCFG_LIBC_NEWLIB */
 {
-#define BUFSIZE 1024  // fit the length of LOG_BUF_SIZE in hiview_log.c
+#define BUFSIZE 128 // fit the length of LOG_BUF_SIZE in hiview_log.c
     char buf[BUFSIZE] = { 0 };
     va_list ap;
     va_start(ap, fmt);

@@ -42,6 +42,14 @@ void OhosFree(void *ptr)
 
 #endif
 
+void IoTWatchDogKick(void)
+{
+}
+
+int access(const char *pathname, int mode)
+{
+    return LOS_Access(pathname, mode);
+}
 
 
 boolean HilogProc_Impl(const HiLogContent *hilogContent, uint32 len)
@@ -53,7 +61,11 @@ boolean HilogProc_Impl(const HiLogContent *hilogContent, uint32 len)
     return TRUE;
 }
 
+
+void _init(void) {}
+void _fini(void) {}
 extern void __libc_fini_array (void);
+extern void __libc_init_array(void);
 
 /*****************************************************************************
  Function    : main
@@ -64,13 +76,6 @@ extern void __libc_fini_array (void);
  *****************************************************************************/
 LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
 {
-#if 0
-    if (atexit(__libc_fini_array) != 0) {
-        
-    };
-    __libc_init_array();
-#endif
-
     UINT32 ret;
     board_init();
     UartInit();
@@ -78,7 +83,6 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
     //board_print_clock_freq();
 
     printf("OHOS start \n\r");
-
 
     ret = LOS_KernelInit();
     if (ret != LOS_OK) {
@@ -89,15 +93,28 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
     HalPlicInit();
     Uart0RxIrqRegister();
 
+#if defined(LOSCFG_SUPPORT_LITTLEFS)
+    HpmLittlefsInit();
+#endif
+
+    /*
+     * Init c++ env
+     * To call:
+     * para_client.c: __attribute__((constructor)) static void ClientInit(void);
+     * 
+     */
+    __libc_init_array();
+    
     printf("\nDeviceManagerStart start ...\n");
     if (DeviceManagerStart()) {
         printf("No drivers need load by hdf manager!");
     }
 
-
     OHOS_SystemInit();
     /* register hilog output func for mini */
     HiviewRegisterHilogProc(HilogProc_Impl);
+
+    
 
 #if (LOSCFG_USE_SHELL == 1)
     ret = LosShellInit();
@@ -105,7 +122,6 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
         printf("LosShellInit failed! ERROR: 0x%x\n", ret);
     }
 #endif
-
     LOS_Start();
 
 START_FAILED:
