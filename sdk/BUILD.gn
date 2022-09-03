@@ -28,6 +28,8 @@ kernel_module(module_name) {
     "${hpm_sdk_path}/drivers/src/hpm_pmp_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_can_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_i2c_drv.c",
+    "${hpm_sdk_path}/drivers/src/hpm_spi_drv.c",
   ]
   
   if (defined(LOSCFG_SOC_HPM6750)) {

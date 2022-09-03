@@ -1,0 +1,10 @@
+root {
+    platform {
+        template config_i2c {
+            match_attr = "";
+            id = 0;
+            base = 0; /* register base address */
+            clk_freq = 24000000; /* spi controler ip frequency in HZ */
+        }
+    }
+}

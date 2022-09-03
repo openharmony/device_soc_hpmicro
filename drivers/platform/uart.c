@@ -35,7 +35,6 @@ struct HPMUartDevice {
     uint32_t irq;
     uint32_t clkFreq;
     struct UartAttribute attribute;
-    uint8_t isInited;
     uint32_t baudRate;
     uint8_t isRxBlock;
     uint8_t isRxDmaEn;
@@ -292,8 +291,8 @@ static int32_t UartDriverInit(struct HdfDeviceObject *device)
         return ret;
     }
 
-    struct HPMUartDevice *hpmUartDev = (struct HPMUartDevice  *)OsalMemCalloc(
-                                        sizeof(struct HPMUartDevice ));
+    struct HPMUartDevice *hpmUartDev = (struct HPMUartDevice *)OsalMemCalloc(
+                                        sizeof(struct HPMUartDevice));
     if (hpmUartDev == NULL) {
         ret = HDF_ERR_MALLOC_FAIL;
         HDF_LOGE("Init: HPMUartDevice malloc Failed!!!\n");

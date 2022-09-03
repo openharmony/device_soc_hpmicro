@@ -11,6 +11,7 @@
 #include "device_resource_if.h"
 #include "hdf_device_desc.h"
 #include "hdf_log.h"
+#include "osal_mem.h"
 #include "gpio_if.h"
 #include "gpio_core.h"
 #include <hpm_gpio_drv.h>

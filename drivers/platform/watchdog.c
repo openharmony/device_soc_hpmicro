@@ -11,6 +11,7 @@
 #include "device_resource_if.h"
 #include "hdf_device_desc.h"
 #include "hdf_log.h"
+#include "osal_mem.h"
 #include "watchdog_if.h"
 #include "watchdog_core.h"
 #include "hpm_wdg_drv.h"
@@ -19,7 +20,7 @@
 
 struct HPMWatchdogDevice {
     uint32_t id;
-    void *base;
+    uint32_t base;
     int32_t status;
     uint32_t timeoutSeconds;
 };

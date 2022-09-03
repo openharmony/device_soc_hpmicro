@@ -36,6 +36,8 @@ hdf_driver(module_name) {
   special_visibility = [ ".." ]
   sources = [ ]
 
+  cflags = [ "-Wall", "-Werror"]
+
   if (defined(LOSCFG_DRIVERS_HDF_PLATFORM_GPIO)) {
     sources += [
       "gpio.c"
@@ -57,6 +59,12 @@ hdf_driver(module_name) {
   if (defined(LOSCFG_DRIVERS_HDF_PLATFORM_WATCHDOG)) {
     sources += [
       "watchdog.c"
+    ]
+  }
+
+  if (defined(LOSCFG_DRIVERS_HDF_PLATFORM_SPI)) {
+    sources += [
+      "spi.c"
     ]
   }
 }
