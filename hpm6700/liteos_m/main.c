@@ -100,7 +100,7 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
     /*
      * Init c++ env
      * To call:
-     * para_client.c: __attribute__((constructor)) static void ClientInit(void);
+     * param_client.c: __attribute__((constructor)) static void ClientInit(void);
      * 
      */
     __libc_init_array();
