@@ -16,23 +16,25 @@ import("//kernel/liteos_m/liteos.gni")
 module_name = get_path_info(rebase_path("."), "name")
 module_switch = defined(LOSCFG_SOC_SERIES_HPM6700)
 kernel_module(module_name) {
+
+  cflags = [ "-Wall", "-Werror"]
   sources = [
     "riscv_hal.c",
     "main.c",
-    "libc/dprintf.c",
+    "dprintf.c",
+    "adapter.c",
     "los_start.S"
   ]
 
   include_dirs = [ 
-    "libc",
     "//utils/native/lite/memory/include",
     "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
+    "//base/hiviewdfx/hilog_lite/frameworks/mini"
   ]
 }
 
 config("public") {
   include_dirs = [
-    ".",
-    "driver",
+    "."
   ]
 }

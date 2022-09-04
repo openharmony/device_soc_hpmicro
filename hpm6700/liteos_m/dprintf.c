@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2013-2019 Huawei Technologies Co., Ltd. All rights reserved.
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd. All rights reserved.
+ * Copyright (c) 2022 HPMicro.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -36,59 +35,36 @@
 #include "los_debug.h"
 #include "los_interrupt.h"
 
-static void dputs(char const *s, int (*pFputc)(int n, FILE *cookie), void *cookie)
+static void dputs(char const *s, int (*pFputc)(int n, void *file), void *file)
 {
     unsigned int intSave;
 
     intSave = LOS_IntLock();
     while (*s) {
-        pFputc(*s++, cookie);
+        pFputc(*s++, file);
     }
     LOS_IntRestore(intSave);
 }
 
+#define BUFSIZE 256
+static char logBuf[1024];
 #ifdef LOSCFG_LIBC_NEWLIB
 int __wrap_printf(char const  *fmt, ...)
 #else /* LOSCFG_LIBC_NEWLIB */
 int printf(char const  *fmt, ...)
 #endif /* LOSCFG_LIBC_NEWLIB */
 {
-#define BUFSIZE 256 // fit the length of LOG_BUF_SIZE in hiview_log.c
-    char buf[BUFSIZE] = { 0 };
-    va_list ap;
-    va_start(ap, fmt);
-    int len = vsnprintf_s(buf, sizeof(buf), BUFSIZE - 1, fmt, ap);   
-    va_end(ap);
+    unsigned int intSave = LOS_IntLock();
+    va_list sap;
+    va_start(sap, fmt);
+    int len = vsnprintf_s(logBuf, sizeof(logBuf), sizeof(logBuf) - 1, fmt, sap);   
+    va_end(sap);
     if (len > 0) {
-        dputs(buf, UartPutc, 0);
+        dputs(logBuf, UartPutc, 0);
     } else {
         dputs("printf error!\n", UartPutc, 0);
     }
-    return len;
-}
-
-#define HDF_KM_LOGV       6
-#define HDF_KM_LOGD       5
-#define HDF_KM_LOGI       4
-#define HDF_KM_LOGW       2
-#define HDF_KM_LOGE       1
-#define HDF_KM_LOG_LEVEL  HDF_KM_LOGW
-
-int hal_trace_printf(int attr, const char *fmt, ...)
-{
-    if (attr > HDF_KM_LOG_LEVEL)
-        return 1;
-
-    char buf[BUFSIZE] = { 0 };
-    va_list ap;
-    va_start(ap, fmt);
-    int len = vsnprintf_s(buf, sizeof(buf), BUFSIZE - 1, fmt, ap);
-    va_end(ap);
-    if (len > 0) {
-        dputs(buf, UartPutc, 0);
-    } else {
-        dputs("printf error!\n", UartPutc, 0);
-    }
+    LOS_IntRestore(intSave);
     return len;
 }
 

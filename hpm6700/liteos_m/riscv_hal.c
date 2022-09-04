@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 HPMicro.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
 #include "soc.h"
 #include "los_reg.h"
 #include "los_arch_interrupt.h"
-
 #include "hpm_soc.h"
 #include "hpm_interrupt.h"
 #ifdef __cplusplus
@@ -91,9 +90,9 @@ VOID HalPlicInit(VOID)
 }
 
 HwiControllerOps g_archHwiOps = {
-    .disableIrq = HalIrqDisable,
-    .enableIrq = HalIrqEnable,
-    .setIrqPriority = HalSetLocalInterPri,
+    .disableIrq = (UINT32 (*)(HWI_HANDLE_T ))HalIrqDisable,
+    .enableIrq = (UINT32 (*)(HWI_HANDLE_T ))HalIrqEnable,
+    .setIrqPriority = (UINT32 (*)(HWI_HANDLE_T , UINT8 ))HalSetLocalInterPri,
 };
 
 

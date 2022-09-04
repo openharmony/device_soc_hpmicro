@@ -13,25 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef _PLIC_H
-#define _PLIC_H
+#include "los_fs.h"
+#include "adapter.h"
 
-#include "los_compiler.h"
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif
-
-extern VOID PlicIrqInit(VOID);
-extern VOID PlicIrqSetPrio(UINT32 vector, UINT32 pri);
-extern VOID PlicIrqEnable(UINT32 vector);
-extern VOID PlicIrqDisable(UINT32 vector);
-
-#ifdef __cplusplus
-#if __cplusplus
+int access(const char *pathname, int mode)
+{
+    return LOS_Access(pathname, mode);
 }
-#endif /* __cplusplus */
-#endif /* __cplusplus */
-#endif
+
+void IoTWatchDogKick(void)
+{
+}
+

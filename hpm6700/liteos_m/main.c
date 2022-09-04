@@ -24,48 +24,29 @@
 #include <ohos_init.h>
 #include "hiview_log.h"
 #include "los_debug.h"
-#if 0
-#include "ohos_mem_pool.h"
+#include "adapter.h"
+#include "riscv_hal.h"
+#include "hiview_output_log.h"
+#include "hpm_littlefs.h"
 
-void *OhosMalloc(MemType type, uint32 size)
-{
-    if (size == 0) {
-        return NULL;
-    }
-    return malloc(size);
-}
-
-void OhosFree(void *ptr)
-{
-    free(ptr);
-}
-
-#endif
-
-void IoTWatchDogKick(void)
-{
-}
-
-int access(const char *pathname, int mode)
-{
-    return LOS_Access(pathname, mode);
-}
-
-
-boolean HilogProc_Impl(const HiLogContent *hilogContent, uint32 len)
-{
-    char tempOutStr[128] = {0};
-    if (LogContentFmt(tempOutStr, sizeof(tempOutStr), hilogContent) > 0) {
-        printf(tempOutStr);
-    }
-    return TRUE;
-}
-
+int DeviceManagerStart(void);
+void OHOS_SystemInit(void);
+UINT32 LosShellInit(VOID);
 
 void _init(void) {}
 void _fini(void) {}
 extern void __libc_fini_array (void);
 extern void __libc_init_array(void);
+
+
+boolean HilogProc_Impl(const HiLogContent *hilogContent, uint32 len)
+{
+    char tempOutStr[128] = {0};
+    if (LogContentFmt(tempOutStr, sizeof(tempOutStr), (const uint8 *)hilogContent) > 0) {
+        printf(tempOutStr);
+    }
+    return TRUE;
+}
 
 /*****************************************************************************
  Function    : main
@@ -80,9 +61,9 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
     board_init();
     UartInit();
     board_print_banner();
-    //board_print_clock_freq();
+    board_print_clock_freq();
 
-    printf("OHOS start \n\r");
+    printf("OHOS start...\n\r");
 
     ret = LOS_KernelInit();
     if (ret != LOS_OK) {
@@ -114,14 +95,13 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
     /* register hilog output func for mini */
     HiviewRegisterHilogProc(HilogProc_Impl);
 
-    
-
 #if (LOSCFG_USE_SHELL == 1)
     ret = LosShellInit();
     if (ret != LOS_OK) {
         printf("LosShellInit failed! ERROR: 0x%x\n", ret);
     }
 #endif
+
     LOS_Start();
 
 START_FAILED:
