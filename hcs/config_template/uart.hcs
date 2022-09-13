@@ -1,0 +1,11 @@
+root {
+    platform {
+        template config_uart {
+            match_attr = "";
+            id = 0;
+            base = 0; /* register base address */
+            irq_num = 0; /* uart controler irq number */
+            clk_freq = 24000000; /* uart controler ip frequency in HZ */
+        }
+    }
+}

@@ -1,0 +1,10 @@
+root {
+    platform {
+        template config_watchdog {
+            match_attr = "";
+            id = 0;
+            base = 0; /* register base address */
+        }
+    }
+}
+

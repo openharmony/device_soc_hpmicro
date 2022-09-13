@@ -1,0 +1,13 @@
+root {
+    platform {
+        template config_gpio {
+            match_attr = "";
+            base = 0; /* register base address */
+            name = ""; /* gpio controler name */
+            port_num = 0; /* gpio controler number, eg: PA is 0, PB is 1, .... */
+            irq_num = 0; /* gpio controler irq number */
+            start = 0; /* gpio pin start number for driver(gpio pin is <start + pin_offset>) */
+            count = 32; /* gpio pin count */
+        }
+    }
+}

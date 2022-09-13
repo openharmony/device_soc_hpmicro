@@ -1,0 +1,4 @@
+[submodule "sdk/hpm_sdk"]
+	path = sdk/hpm_sdk
+	url = https://gitee.com/hpmicro/hpm_sdk.git
+	branch = main
