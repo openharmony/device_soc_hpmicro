@@ -346,7 +346,7 @@ uint32_t enet_prepare_transmission_descriptors(ENET_Type *ptr, enet_tx_desc_t **
         dma_tx_desc->tdes0_bm.dc = 1;
         dma_tx_desc->tdes0_bm.dp = 0;
         dma_tx_desc->tdes0_bm.crcr = 1;
-        dma_tx_desc->tdes0_bm.cic = 3;
+        dma_tx_desc->tdes0_bm.cic = 1;
         dma_tx_desc->tdes1_bm.saic = 2;
 
         /* set the frame size */
