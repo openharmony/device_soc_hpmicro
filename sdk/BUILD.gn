@@ -42,7 +42,15 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/soc/HPM6750/hpm_otp_drv.c",
       "${hpm_sdk_path}/soc/HPM6750/hpm_clock_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pllctl_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
     ]
+  }
+
+  if (defined(LOSCFG_NET_LWIP_SACK)) {
+     sources += [
+      "${hpm_sdk_path}/components/enet_phy/rtl8201/hpm_rtl8201.c",
+      "${hpm_sdk_path}/components/enet_phy/rtl8211/hpm_rtl8211.c",
+    ]   
   }
 }
 
@@ -58,5 +66,12 @@ config("public") {
         "${hpm_sdk_path}/soc/HPM6750",
         "${hpm_sdk_path}/soc/HPM6750/boot",
     ]
+  }
+
+  if (defined(LOSCFG_NET_LWIP_SACK)) {
+     include_dirs += [
+      "${hpm_sdk_path}/components/enet_phy/rtl8201",
+      "${hpm_sdk_path}/components/enet_phy/rtl8211",
+    ]   
   }
 }
