@@ -16,12 +16,12 @@
 #include "los_fs.h"
 #include "adapter.h"
 
-int access(const char *pathname, int mode)
+__attribute__((weak)) int access(const char *pathname, int mode)
 {
     return LOS_Access(pathname, mode);
 }
 
-void IoTWatchDogKick(void)
+__attribute__((weak)) void IoTWatchDogKick(void)
 {
 }
 
