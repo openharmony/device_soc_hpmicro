@@ -98,7 +98,8 @@ void init_i2c_pins_as_gpio(I2C_Type *ptr)
         HPM_BIOC->PAD[IOC_PAD_PZ11].FUNC_CTL = 3;
         HPM_BIOC->PAD[IOC_PAD_PZ10].FUNC_CTL = 3;
     } else {
-        while(1);
+        while (1) {
+        }
     }
 }
 
@@ -115,7 +116,8 @@ void init_i2c_pins(I2C_Type *ptr)
         HPM_IOC->PAD[IOC_PAD_PZ11].PAD_CTL = IOC_PAD_PAD_CTL_OD_MASK;
         HPM_IOC->PAD[IOC_PAD_PZ10].PAD_CTL = IOC_PAD_PAD_CTL_OD_MASK;
     } else {
-        while(1);
+        while (1) {
+        }
     }
 }
 
@@ -426,9 +428,9 @@ void init_can_pins(CAN_Type *ptr)
     }
 }
 
-void init_sdxc_pins(SDXC_Type * ptr, bool use_1v8)
+void init_sdxc_pins(SDXC_Type *ptr, bool use_1v8)
 {
-    uint32_t cmd_func_ctl = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(17) | IOC_PAD_FUNC_CTL_LOOP_BACK_SET(1);;
+    uint32_t cmd_func_ctl = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(17) | IOC_PAD_FUNC_CTL_LOOP_BACK_SET(1);
     uint32_t func_ctl = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(17);
     uint32_t pad_ctl = IOC_PAD_PAD_CTL_MS_SET(use_1v8) | IOC_PAD_PAD_CTL_DS_SET(7) | IOC_PAD_PAD_CTL_PE_SET(1) |
                        IOC_PAD_PAD_CTL_PS_SET(1);

@@ -17,7 +17,7 @@ static hpm_stat_t hpm_spi_tx_trigger_dma(DMA_Type *dma_ptr, uint8_t ch_num, SPI_
     config.src_fixed = false;
     config.size_in_byte = size;
 
-    return dma_setup_handshake(dma_ptr, &config);
+    return dma_setup_handshake(dma_ptr, &config, true);
 }
 
 static hpm_stat_t hpm_spi_rx_trigger_dma(DMA_Type *dma_ptr, uint8_t ch_num, SPI_Type *spi_ptr, uint32_t dst, uint32_t size)
@@ -30,7 +30,7 @@ static hpm_stat_t hpm_spi_rx_trigger_dma(DMA_Type *dma_ptr, uint8_t ch_num, SPI_
     config.src_fixed = true;
     config.size_in_byte = size;
 
-    return dma_setup_handshake(dma_ptr, &config);
+    return dma_setup_handshake(dma_ptr, &config, true);
 }
 
 
@@ -274,7 +274,7 @@ static hpm_stat_t spi_setup_trans_with_dma_chain(spi_context_t *context, spi_con
     dma_ch_config.size_in_byte = 4;
     dma_ch_config.linked_ptr = core_local_mem_to_sys_address(context->running_core, (uint32_t)(dma_linked_descriptor + SPI_DMA_DESC_COUNT_PER_TRANS - 1));
 
-    stat = dma_setup_channel(dma_ptr, dma_channel, &dma_ch_config);
+    stat = dma_setup_channel(dma_ptr, dma_channel, &dma_ch_config, true);
     if (stat != status_success) {
         return stat;
     }

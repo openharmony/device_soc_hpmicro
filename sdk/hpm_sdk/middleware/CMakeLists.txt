@@ -1,4 +1,4 @@
-# Copyright 2021 hpmicro
+# Copyright 2021-2022 hpmicro
 # SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory_ifdef(CONFIG_LVGL littlevgl)
@@ -14,3 +14,5 @@ add_subdirectory_ifdef(CONFIG_COREMARK coremark)
 add_subdirectory_ifdef(CONFIG_TFLM tflm)
 add_subdirectory_ifdef(CONFIG_HPM_MATH hpm_math)
 add_subdirectory_ifdef(CONFIG_AUDIO_CODEC audio_codec)
+add_subdirectory_ifdef(CONFIG_SEGGER_RTT segger_rtt)
+add_subdirectory_ifdef(CONFIG_ERPC erpc)

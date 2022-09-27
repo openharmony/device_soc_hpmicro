@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 static inline void pmon_enable(PMON_Type *ptr,
-                                   uint8_t monitor_index, 
+                                   uint8_t monitor_index,
                                    bool enable)
 {
     ptr->MONITOR[monitor_index].CONTROL = (ptr->MONITOR[monitor_index].CONTROL
@@ -29,7 +29,7 @@ static inline void pmon_enable(PMON_Type *ptr,
 }
 
 static inline void pmon_select_glitch_mode(PMON_Type *ptr,
-                                               uint8_t monitor_index, 
+                                               uint8_t monitor_index,
                                                bool active_mode)
 {
     ptr->MONITOR[monitor_index].CONTROL = (ptr->MONITOR[monitor_index].CONTROL

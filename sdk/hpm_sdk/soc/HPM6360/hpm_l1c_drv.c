@@ -89,6 +89,11 @@ void l1c_dc_writeback_all(void)
     l1c_cctl_cmd(HPM_L1C_CCTL_CMD_L1D_WB_ALL);
 }
 
+void l1c_dc_flush_all(void)
+{
+    l1c_cctl_cmd(HPM_L1C_CCTL_CMD_L1D_WBINVAL_ALL);
+}
+
 void l1c_dc_fill_lock(uint32_t address, uint32_t size)
 {
     ASSERT_ADDR_SIZE(address, size);

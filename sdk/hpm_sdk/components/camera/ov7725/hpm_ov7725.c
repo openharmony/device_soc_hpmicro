@@ -125,8 +125,7 @@ hpm_stat_t ov7725_write_register(camera_context_t *context, uint8_t reg, uint8_t
 void ov7725_restore_default_values(camera_context_t *context)
 {
     uint32_t i;
-    for (i = 0; i < (ARRAY_SIZE(ov7725_default_regs)); i++)
-    {
+    for (i = 0; i < (ARRAY_SIZE(ov7725_default_regs)); i++) {
         ov7725_write_register(context, ov7725_default_regs[i][0], ov7725_default_regs[i][1]);
     }
 }
@@ -178,7 +177,7 @@ static hpm_stat_t ov7725_set_framesize(camera_context_t *context, uint16_t width
     stat |= ov7725_write_register(context, HOUTSIZE, width >> 2);
     stat |= ov7725_write_register(context, VOUTSIZE, height >> 1);
 
-    stat |= ov7725_write_register(context, HREF, 
+    stat |= ov7725_write_register(context, HREF,
             ((vstart & 1) << 6) | ((hstart & 3) << 4) | ((height & 1) << 2) | ((hsize & 3) << 0));
 
     stat = ov7725_write_register(context, EXHCH, ((height & 0x1) << 2) | (width & 0x3));
@@ -196,15 +195,15 @@ hpm_stat_t ov7725_set_pixel_format(camera_context_t *context, display_pixel_form
     stat |= ov7725_read_register(context, COM7, &val);
     val &= ~0x1F;
     switch (pixel_format) {
-        case display_pixel_format_rgb565:
-            val |= COM7_FMT_RGB565;
-            break;
-        case display_pixel_format_rgb444:
-            val |= COM7_FMT_RGB444;
-            break;
-        default:
-            stat = status_invalid_argument;
-            break;
+    case display_pixel_format_rgb565:
+        val |= COM7_FMT_RGB565;
+        break;
+    case display_pixel_format_rgb444:
+        val |= COM7_FMT_RGB444;
+        break;
+    default:
+        stat = status_invalid_argument;
+        break;
     }
     if (stat != status_success) {
         return stat;

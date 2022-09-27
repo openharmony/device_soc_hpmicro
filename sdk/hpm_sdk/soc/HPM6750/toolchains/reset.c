@@ -84,7 +84,8 @@ __attribute__((weak)) void c_startup(void)
 
 __attribute__((weak)) int main(void)
 {
-    while(1);
+    while (1) {
+    }
 }
 
 __attribute__((weak)) void reset_handler(void)
@@ -102,7 +103,7 @@ __attribute__((weak)) void reset_handler(void)
     /* Call platform specific hardware initialization */
     system_init();
 
-#ifdef __cplusplus
+#if !defined(__SEGGER_RTL_VERSION) || defined(__GNU_LINKER)
     /* Do global constructors */
     __libc_init_array();
 #endif
@@ -116,14 +117,14 @@ __attribute__((weak)) void reset_handler(void)
  * a call to __cxa_atexit() with __dso_handle as one of the arguments.
  * The dummy versions of these symbols should be provided.
  */
-void __cxa_atexit(void (*arg1)(void*), void* arg2, void* arg3)
+void __cxa_atexit(void (*arg1)(void *), void *arg2, void *arg3)
 {
 }
 
 #ifndef __SEGGER_RTL_VERSION
-void*   __dso_handle = (void*) &__dso_handle;
+void *__dso_handle = (void *) &__dso_handle;
 #endif
 
-__attribute__((weak)) void _init()
+__attribute__((weak)) void _init(void)
 {
 }

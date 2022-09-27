@@ -468,6 +468,11 @@ void l1c_dc_invalidate_all(void);
  */
 void l1c_dc_writeback_all(void);
 
+/*
+ * @brief Flush all d-cache
+ */
+void l1c_dc_flush_all(void);
+
 #ifdef __cplusplus
 }
 #endif
