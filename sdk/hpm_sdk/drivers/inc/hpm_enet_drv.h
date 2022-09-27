@@ -8,9 +8,10 @@
 #ifndef HPM_ENET_DRV_H
 #define HPM_ENET_DRV_H
 
-/*---------------------------------------------------------------------*
+/*---------------------------------------------------------------------
  * Includes
- *---------------------------------------------------------------------*/
+ *---------------------------------------------------------------------
+ */
 #include "hpm_common.h"
 #include "hpm_enet_regs.h"
 #include "hpm_soc_feature.h"
@@ -23,9 +24,10 @@
  * @{
  */
 
-/*---------------------------------------------------------------------*
+/*---------------------------------------------------------------------
  *  Macro Constant Declarations
- *---------------------------------------------------------------------*/
+ *---------------------------------------------------------------------
+ */
 #define ENET_HEADER               (14U)    /**< 6-byte Dest addr, 6-byte Src addr, 2-byte type */
 #define ENET_EXTRA                (2U)     /**< Extra bytes in some cases */
 #define ENET_VLAN_TAG             (4U)     /**< optional 802.1q VLAN Tag */
@@ -40,9 +42,10 @@
 
 #define ENET_ADJ_FREQ_BASE_ADDEND (0x7fffffffUL)  /**< PTP base adjustment addend */
 #define ENET_ONE_SEC_IN_NANOSEC   (1000000000UL)  /**< one second in nanoseconds */
-/*---------------------------------------------------------------------*
+/*---------------------------------------------------------------------
  *  Typedef Enum Declarations
- *---------------------------------------------------------------------*/
+ *---------------------------------------------------------------------
+ */
 /** @brief Programmable burst length selections */
 typedef enum {
     enet_pbl_1  = 1,
@@ -141,9 +144,10 @@ typedef enum {
     enet_ptp_count_res_low        /* ptp su-second count resolution at 1 ns */
 } enet_ptp_count_res_t;
 
-/*---------------------------------------------------------------------*
+/*---------------------------------------------------------------------
  *  Typedef Struct Declarations
- *---------------------------------------------------------------------*/
+ *---------------------------------------------------------------------
+ */
 /** @brief enet buffer config struct */
 typedef struct {
     uint32_t buffer;
@@ -240,8 +244,7 @@ typedef struct {
 
 
 /** @brief reception descriptor struct */
-typedef struct
-{
+typedef struct {
     union {
         uint32_t rdes0;
 
@@ -328,7 +331,7 @@ typedef struct
 
     struct {
         uint32_t rtsl;  /**< Receive Frame Timestamp Low */
-    }rdes6_bm;
+    } rdes6_bm;
 
     struct {
         uint32_t rtsh;  /**< Receive Frame Timestamp High */
@@ -385,9 +388,10 @@ typedef struct {
 #if defined __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-/*---------------------------------------------------------------------*
+/*---------------------------------------------------------------------
  * Exported Functions
- *---------------------------------------------------------------------*/
+ *---------------------------------------------------------------------
+ */
 /**
  * @brief Initialize controller
  *

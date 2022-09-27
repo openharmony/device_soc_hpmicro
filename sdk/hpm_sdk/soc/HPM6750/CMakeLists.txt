@@ -4,7 +4,8 @@
 sdk_inc(toolchains)
 
 if(NOT DEFINED USE_CUSTOM_STARTUP)
-sdk_src(toolchains/gcc/start.S)
+    sdk_gcc_src(toolchains/gcc/start.S)
+    sdk_ses_src(toolchains/segger/startup.s)
 endif()
 
 sdk_src(

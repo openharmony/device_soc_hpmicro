@@ -10,7 +10,6 @@
 #include "hpm_lcdc_drv.h"
 #include "hpm_i2c_drv.h"
 #include "hpm_gpio_drv.h"
-#include "hpm_debug_console.h"
 #include "hpm_dram_drv.h"
 #include "pinmux.h"
 #include "hpm_pmp_drv.h"
@@ -22,6 +21,10 @@
 #include "hpm_trgm_drv.h"
 #include "hpm_pllctlv2_drv.h"
 #include "hpm_pcfg_drv.h"
+
+#if !defined(CONFIG_NDEBUG_CONSOLE) || !CONFIG_NDEBUG_CONSOLE
+#include "hpm_debug_console.h"
+#endif
 
 static board_timer_cb timer_cb;
 
@@ -88,6 +91,7 @@ ATTR_PLACE_AT(".uf2_signature") const uint32_t uf2_signature = BOARD_UF2_SIGNATU
 
 void board_init_console(void)
 {
+#if !defined(CONFIG_NDEBUG_CONSOLE) || !CONFIG_NDEBUG_CONSOLE
 #if console_type_uart == BOARD_CONSOLE_TYPE
     console_config_t cfg;
 
@@ -109,6 +113,7 @@ void board_init_console(void)
 #else
     while (1) {
     }
+#endif
 #endif
 }
 
@@ -456,6 +461,11 @@ uint32_t board_init_pdm_clock(void)
     return clock_get_frequency(clock_pdm);
 }
 
+hpm_stat_t board_set_audio_pll_clock(uint32_t freq)
+{
+    return pllctlv2_init_pll_with_freq(HPM_PLLCTLV2, 2, freq);    /* pll2clk */
+}
+
 uint32_t board_init_i2s_clock(I2S_Type *ptr)
 {
     return 0;
@@ -472,7 +482,7 @@ uint32_t board_init_dac_clock(DAC_Type *ptr, bool clk_src_ahb)
 
     if (ptr == HPM_DAC) {
         if (clk_src_ahb == true) {
-            /* Configure the DAC clock to 133MHz */
+            /* Configure the DAC clock to 160MHz */
             clock_set_dac_source(clock_dac0, clk_dac_src_ahb);
         } else {
             /* Configure the DAC clock to 166MHz */
@@ -655,6 +665,11 @@ hpm_stat_t board_init_enet_pins(ENET_Type *ptr)
 {
     init_enet_pins(ptr);
 
+    return status_success;
+}
+
+hpm_stat_t board_reset_enet_phy(ENET_Type *ptr)
+{
     return status_success;
 }
 

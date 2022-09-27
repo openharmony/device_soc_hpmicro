@@ -20,7 +20,7 @@
 #undef GT911_I2C_ADDR
 
 /* enable auto probe */
-#ifndef GT911_NO_AUTO_PROBE 
+#ifndef GT911_NO_AUTO_PROBE
 #define GT911_NO_AUTO_PROBE 0
 #endif
 

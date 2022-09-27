@@ -145,7 +145,7 @@ static inline uint8_t i2c_get_data_count(I2C_Type *ptr)
 }
 
 /**
- * @brief check if I2C FIFO is full 
+ * @brief check if I2C FIFO is full
  *
  * @param [in] ptr I2C base address
  * @retval true if FIFO is full
@@ -156,11 +156,11 @@ static inline bool i2c_fifo_is_full(I2C_Type *ptr)
 }
 
 /**
- * @brief check if I2C FIFO is half 
+ * @brief check if I2C FIFO is half
  *
  * @note When I2C is transmitting data, it indicates if fifo is half-empty;
  * @note When I2C is receiving data, it indicates if fifo is half full.
- * 
+ *
  * @param [in] ptr I2C base address
  * @retval true if FIFO is half empty or full
  */
@@ -171,7 +171,7 @@ static inline bool i2c_fifo_is_half(I2C_Type *ptr)
 
 /**
  * @brief check if I2C FIFO is empty
- * 
+ *
  * @param [in] ptr I2C base address
  * @retval true if FIFO is empty
  */
@@ -196,7 +196,7 @@ static inline bool i2c_is_writing(I2C_Type *ptr)
 
 /**
  * @brief check if I2C is reading
- * 
+ *
  * @param [in] ptr I2C base address
  * @retval bool value
  *  @arg true: send data if master mode, receive data in slave mode
@@ -210,7 +210,7 @@ static inline bool i2c_is_reading(I2C_Type *ptr)
 
 /**
  * @brief clear status
- * 
+ *
  * @details Clear status based on mask
  *
  * @param [in] ptr I2C base address
@@ -290,7 +290,7 @@ hpm_stat_t i2c_init_master(I2C_Type *ptr,
                            i2c_config_t *config);
 
 /**
- * @brief I2C master write data to specific address of certain slave device 
+ * @brief I2C master write data to specific address of certain slave device
  *
  * @details Write to certain I2C device at specific address within that device
  *
@@ -304,13 +304,13 @@ hpm_stat_t i2c_init_master(I2C_Type *ptr,
  */
 hpm_stat_t i2c_master_address_write(I2C_Type *ptr,
                             const uint16_t device_address,
-                            uint8_t *addr, 
-                            uint8_t addr_size_in_byte, 
+                            uint8_t *addr,
+                            uint8_t addr_size_in_byte,
                             uint8_t *buf,
                             const uint32_t size_in_byte);
 
 /**
- * @brief I2C master read data from specific address of certain slave device 
+ * @brief I2C master read data from specific address of certain slave device
  *
  * @details Read fram certain I2C device at specific address within that device
  *
@@ -330,7 +330,7 @@ hpm_stat_t i2c_master_address_read(I2C_Type *ptr,
                            const uint32_t size);
 
 /**
- * @brief I2C master write data to certain slave device 
+ * @brief I2C master write data to certain slave device
  *
  * @details Write data to I2C device
  *
@@ -368,7 +368,7 @@ void i2c_master_start_dma_write(I2C_Type *i2c_ptr, const uint16_t device_address
 void i2c_master_start_dma_read(I2C_Type *i2c_ptr, const uint16_t device_address, uint32_t size);
 
 /**
- * @brief I2C master read data from certain slave device 
+ * @brief I2C master read data from certain slave device
  *
  * @details Read data from I2C device
  *
@@ -421,7 +421,7 @@ hpm_stat_t i2c_slave_read(I2C_Type *ptr, uint8_t *buf, const uint32_t size);
 hpm_stat_t i2c_slave_write(I2C_Type *ptr, uint8_t *buf, const uint32_t size);
 
 /**
- * @brief reset I2C 
+ * @brief reset I2C
  *
  * @param [in] ptr I2C base address
  */

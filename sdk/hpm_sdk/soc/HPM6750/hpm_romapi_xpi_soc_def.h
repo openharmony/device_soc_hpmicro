@@ -61,8 +61,7 @@ typedef enum {
 } xpi_clk_src_t;
 
 
-typedef union
-{
+typedef union {
     struct {
         uint8_t freq;
         bool enable_ddr;

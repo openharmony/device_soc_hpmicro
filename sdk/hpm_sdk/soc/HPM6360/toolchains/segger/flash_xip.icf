@@ -7,8 +7,8 @@
 define memory with size = 4G;
 
 /* Regions */
-define region NOR_CFG_OPTION = [ from 0x80000400 size 0x1000 ];
-define region BOOT_HEADER = [ from 0x80001000 size 0x3000 ];
+define region NOR_CFG_OPTION = [ from 0x80000400 size 0xc00 ];
+define region BOOT_HEADER = [ from 0x80001000 size 0x2000 ];
 define region XPI0 = [from 0x80003000 size _flash_size - 0x3000 ];   /* XPI0 */
 define region ILM   = [from 0 size 128k];        /* ILM */
 define region DLM   = [from 0x80000 size 128k];    /* DLM */

@@ -36,36 +36,36 @@ extern "C" {
 #define BLDC_PWM_V          1
 #define BLDC_PWM_W          2
 extern void bldc_nullcallback_func(void);
-typedef enum bldc_hall_phase{
+typedef enum bldc_hall_phase {
     bldc_hall_phase_60, /*60 °*/
     bldc_hall_phase_120 /*120 °*/
-}bldc_hall_phase_t;
+} bldc_hall_phase_t;
 
 /*电机相关结构体定义,请遵守命名规则，物理性性质描述定义：输入（I）/输出（O）_物理量描述_物理量单位*/
-typedef struct bldc_motor_par{
+typedef struct bldc_motor_par {
     /*输入参数*/
-    float  I_Rstator_ohm; 	        /* 例：输入：定子电阻 (单位ohm)（下同省略） */
+    float  I_Rstator_ohm;             /* 例：输入：定子电阻 (单位ohm)（下同省略） */
     float  I_Poles_n;               /*极对数*/
     float  I_MaxSpeed_rs;           /*最大转速  r/s*/
-    float  I_Lstator_h;				      /* 定子电感 */	  			      
-    float  I_PhaseCur_a; 			      /* 额定电流 */
-    float  I_PhaseVol_v;			      /* 额定电压 */
-    float  I_SamplingPer_s;			    /* 电流采样周期*/
-    
-    /*输出参数*/
-    HPM_MOTOR_MATH_TYPE  O_smc_f;			                /* 滑膜控制系数1 */
-    HPM_MOTOR_MATH_TYPE  O_smc_g;			                /* 滑膜控制系数2*/
-    /*电机参数相关的函数*/
-    void   (*func_smc_const)();	    	/* 计算滑膜控制系数的函数 */ 
-}BLDC_MOTOR_PARA;
+    float  I_Lstator_h;                      /* 定子电感 */
+    float  I_PhaseCur_a;                   /* 额定电流 */
+    float  I_PhaseVol_v;                  /* 额定电压 */
+    float  I_SamplingPer_s;                /* 电流采样周期*/
 
-#define BLDC_MOTOR_PARA_DEFAULTS {0,0,0,\
-                                        0,0,0,\
-                                        0,0,0,\
+    /*输出参数*/
+    HPM_MOTOR_MATH_TYPE  O_smc_f;                            /* 滑膜控制系数1 */
+    HPM_MOTOR_MATH_TYPE  O_smc_g;                            /* 滑膜控制系数2*/
+    /*电机参数相关的函数*/
+    void   (*func_smc_const)();            /* 计算滑膜控制系数的函数 */
+} BLDC_MOTOR_PARA;
+
+#define BLDC_MOTOR_PARA_DEFAULTS {0, 0, 0,\
+                                        0, 0, 0,\
+                                        0, 0, 0,\
                                         &bldc_nullcallback_func}
 
 /*速度计算参数*/
-typedef struct  bldc_contrl_spd_par{
+typedef struct  bldc_contrl_spd_par {
     uint16_t            I_speedacq;               /*采集n次角度数据后，更新一次速度数据*/
     uint16_t            num;                    /*计数用内部计算*/
     HPM_MOTOR_MATH_TYPE       I_speedLooptime_s;        /*循环n次的时间 s*/
@@ -77,13 +77,13 @@ typedef struct  bldc_contrl_spd_par{
     HPM_MOTOR_MATH_TYPE       O_speedout;               /*直接速度输出*/
     BLDC_MOTOR_PARA     *I_motorpar;                /*电机参数*/
     void    (*func_getspd)();                     /*速度运算函数*/
-}BLDC_CONTRL_SPD_PARA;
+} BLDC_CONTRL_SPD_PARA;
 
-#define BLDC_CONTRL_SPD_PARA_DEFAULTS {0,0,0,0,0,\
-                                        0,0,0,0,NULL,\
+#define BLDC_CONTRL_SPD_PARA_DEFAULTS {0, 0, 0, 0, 0,\
+                                        0, 0, 0, 0, NULL,\
                                         &bldc_nullcallback_func}
 /*针对所有pid控制*/
-typedef struct bldc_contrl_pid_par{
+typedef struct bldc_contrl_pid_par {
     HPM_MOTOR_MATH_TYPE       I_kp;                   /*Kp*/
     HPM_MOTOR_MATH_TYPE       I_ki;                   /*Ki*/
     HPM_MOTOR_MATH_TYPE       I_kd;                   /*Kd*/
@@ -93,12 +93,12 @@ typedef struct bldc_contrl_pid_par{
     HPM_MOTOR_MATH_TYPE       cur;                    /*采集*/
     HPM_MOTOR_MATH_TYPE       outval;                 /*输出*/
     void (*func_pid)();                         /*Pid控制程序*/
-}BLDC_CONTRL_PID_PARA;
-#define BLDC_CONTRL_PID_PARA_DEFAULTS {0,0,0,0,\
-                                        0,0,0,0,\
+} BLDC_CONTRL_PID_PARA;
+#define BLDC_CONTRL_PID_PARA_DEFAULTS {0, 0, 0, 0,\
+                                        0, 0, 0, 0,\
                                        &bldc_nullcallback_func}
 /*电流采样参数*/
-typedef struct bldc_contrl_current_par{
+typedef struct bldc_contrl_current_par {
     uint16_t            adc_u;                  /*u相电流ad字*/
     uint16_t            adc_v;                  /*v相电流ad字*/
     uint16_t            adc_w;                  /*W相电流ad字*/
@@ -108,15 +108,15 @@ typedef struct bldc_contrl_current_par{
     HPM_MOTOR_MATH_TYPE       cal_u;                  /*计算后的U相电流*/
     HPM_MOTOR_MATH_TYPE       cal_v;                  /*计算后的v相电流*/
     HPM_MOTOR_MATH_TYPE       cal_w;                  /*计算后的W相电流*/
-    void*               userdata;               /*用户扩展数据*/
+    void *userdata;               /*用户扩展数据*/
     void (*func_sampl)();                         /*电流采样*/
-}BLDC_CONTROL_CURRENT_PARA;
-#define BLDC_CONTROL_CURRENT_PARA_DEFAULTS {0,0,0,\
-                                            0,0,0,\
-                                            0,0,0,\
-                                            NULL,&bldc_nullcallback_func}
+} BLDC_CONTROL_CURRENT_PARA;
+#define BLDC_CONTROL_CURRENT_PARA_DEFAULTS {0, 0, 0,\
+                                            0, 0, 0,\
+                                            0, 0, 0,\
+                                            NULL, &bldc_nullcallback_func}
 /*pwm*/
-typedef struct bldc_control_pwmout_par{
+typedef struct bldc_control_pwmout_par {
     uint8_t             I_motor_id;                 /*电机id*/
     uint8_t             I_sync_id;            /*同步id*/
     uint32_t            pwm_u;
@@ -124,56 +124,56 @@ typedef struct bldc_control_pwmout_par{
     uint32_t            pwm_w;
     uint32_t            I_pwm_reload;
     void (*func_set_pwm)();                 /*指向输出pwm函数*/
-}BLDC_CONTROL_PWMOUT_PARA;
-#define BLDC_CONTROL_PWMOUT_PARA_DEFAULTS {0,0,0,\
-                                            0,0,0,\
+} BLDC_CONTROL_PWMOUT_PARA;
+#define BLDC_CONTROL_PWMOUT_PARA_DEFAULTS {0, 0, 0,\
+                                            0, 0, 0,\
                                             &bldc_nullcallback_func}
-typedef struct bldc_control_pwm_par{
+typedef struct bldc_control_pwm_par {
     HPM_MOTOR_MATH_TYPE       target_alpha;
     HPM_MOTOR_MATH_TYPE       target_beta;
     int8_t             sector;             /*当前扇区，方便以后扩展功能*/
     uint32_t            I_pwm_reload_max;       /*最大占空比*/
     BLDC_CONTROL_PWMOUT_PARA    pwmout;
     void (*func_spwm)();                    /*指向处理函数*/
-}BLDC_CONTROL_PWM_PARA;
-#define BLDC_CONTROL_PWM_PARA_DEFAULTS {0,0,0,0,\
+} BLDC_CONTROL_PWM_PARA;
+#define BLDC_CONTROL_PWM_PARA_DEFAULTS {0, 0, 0, 0,\
                                            BLDC_CONTROL_PWMOUT_PARA_DEFAULTS,\
                                             &bldc_nullcallback_func}
 /*sliding mode control(SMC)*/
-typedef struct bldc_control_smc_par{
+typedef struct bldc_control_smc_par {
     HPM_MOTOR_MATH_TYPE       I_Ezero;    /*hua*/
-    HPM_MOTOR_MATH_TYPE       I_ksmc;  
-    HPM_MOTOR_MATH_TYPE       I_kfil;     
+    HPM_MOTOR_MATH_TYPE       I_ksmc;
+    HPM_MOTOR_MATH_TYPE       I_kfil;
     HPM_MOTOR_MATH_TYPE       *ualpha;
-    HPM_MOTOR_MATH_TYPE       *ubeta;     	       		
+    HPM_MOTOR_MATH_TYPE       *ubeta;
     HPM_MOTOR_MATH_TYPE       *ialpha;
-    HPM_MOTOR_MATH_TYPE       *ibeta;  
+    HPM_MOTOR_MATH_TYPE       *ibeta;
     /*内部运算*/
     HPM_MOTOR_MATH_TYPE       ialpha_mem;
-    HPM_MOTOR_MATH_TYPE       ibeta_mem;            
-    HPM_MOTOR_MATH_TYPE       alpha_cal;   	
-    HPM_MOTOR_MATH_TYPE       zalpha_cal; 
-    HPM_MOTOR_MATH_TYPE       beta_cal;  	
-    HPM_MOTOR_MATH_TYPE       zbeta_cal;  
-    /*输出*/    
+    HPM_MOTOR_MATH_TYPE       ibeta_mem;
+    HPM_MOTOR_MATH_TYPE       alpha_cal;
+    HPM_MOTOR_MATH_TYPE       zalpha_cal;
+    HPM_MOTOR_MATH_TYPE       beta_cal;
+    HPM_MOTOR_MATH_TYPE       zbeta_cal;
+    /*输出*/
     HPM_MOTOR_MATH_TYPE       *theta;
-    BLDC_MOTOR_PARA     *I_motorpar;                /*电机参数*/ 
+    BLDC_MOTOR_PARA     *I_motorpar;                /*电机参数*/
     void (*func_smc)();
-}BLDC_CONTROL_SMC_PARA;
+} BLDC_CONTROL_SMC_PARA;
 
-#define BLDC_CONTROL_SMC_PARA_DEFAULTS {0,0,0,NULL,NULL,\
-                                        NULL,NULL,0,0,0,\
-                                        0,0,0,NULL,\
+#define BLDC_CONTROL_SMC_PARA_DEFAULTS {0, 0, 0, NULL, NULL,\
+                                        NULL, NULL, 0, 0, 0,\
+                                        0, 0, 0, NULL,\
                                         NULL,\
-                                         &bldc_nullcallback_func }
+                                         &bldc_nullcallback_func}
 /*可以进行自主选择调用的函数*/
-typedef struct bldc_func_cal{
+typedef struct bldc_func_cal {
     void *par;
     void (*func)();
-}BLDC_FUNC_CAL;
+} BLDC_FUNC_CAL;
 #define BLDC_FUNC_CAL_DEFAULTS {NULL, &bldc_nullcallback_func}
 /*foc控制*/
-typedef struct bldc_contrl_foc_par{
+typedef struct bldc_contrl_foc_par {
     BLDC_CONTRL_PID_PARA        CurrentDPiPar;             /*D轴电流*/
     BLDC_CONTRL_PID_PARA        CurrentQPiPar;             /*Q轴电流*/
     BLDC_CONTRL_SPD_PARA        SpeedCalPar;                  /*速度参数*/
@@ -187,13 +187,13 @@ typedef struct bldc_contrl_foc_par{
     HPM_MOTOR_MATH_TYPE               i_alpha;
     HPM_MOTOR_MATH_TYPE               i_beta;
     void (*func_dqsvpwm)();
-}BLDC_CONTROL_FOC_PARA;
-#define BLDC_CONTROL_FOC_PARA_DEFAULTS {BLDC_CONTRL_PID_PARA_DEFAULTS,BLDC_CONTRL_PID_PARA_DEFAULTS,\
-                                        BLDC_CONTRL_SPD_PARA_DEFAULTS,0,\
-                                        BLDC_CONTROL_CURRENT_PARA_DEFAULTS,BLDC_MOTOR_PARA_DEFAULTS,\
+} BLDC_CONTROL_FOC_PARA;
+#define BLDC_CONTROL_FOC_PARA_DEFAULTS {BLDC_CONTRL_PID_PARA_DEFAULTS, BLDC_CONTRL_PID_PARA_DEFAULTS,\
+                                        BLDC_CONTRL_SPD_PARA_DEFAULTS, 0,\
+                                        BLDC_CONTROL_CURRENT_PARA_DEFAULTS, BLDC_MOTOR_PARA_DEFAULTS,\
                                         BLDC_CONTROL_PWM_PARA_DEFAULTS,\
-                                        BLDC_FUNC_CAL_DEFAULTS ,\
-                                        0,0,0,0,&bldc_nullcallback_func}
+                                        BLDC_FUNC_CAL_DEFAULTS,\
+                                        0, 0, 0, 0, &bldc_nullcallback_func}
 
 #if defined(__cplusplus)
 }

@@ -23,40 +23,40 @@ void cam_get_default_config(CAM_Type *ptr, cam_config_t *config, display_pixel_f
     config->color_format = CAM_COLOR_FORMAT_RGB565;
     config->sensor_bitwidth = CAM_SENSOR_BITWIDTH_10BITS;
 
-    switch(pixel_format) {
-        case display_pixel_format_yuv422:
-            config->csc_config.enable = true;
-            config->csc_config.ycbcr_mode = false;
-            config->csc_config.yuv2rgb_coef.c0 = 0x100;
-            config->csc_config.yuv2rgb_coef.uv_offset = 0;
-            config->csc_config.yuv2rgb_coef.y_offset = 0;
-            config->csc_config.yuv2rgb_coef.c1 = 0x123;
-            config->csc_config.yuv2rgb_coef.c2 = 0x76B;
-            config->csc_config.yuv2rgb_coef.c3 = 0x79C;
-            config->csc_config.yuv2rgb_coef.c4 = 0x208;
-            break;
-        case display_pixel_format_ycbcr422:
-            config->csc_config.enable = true;
-            config->csc_config.ycbcr_mode = true;
-            config->csc_config.yuv2rgb_coef.c0 = 0x12A;
-            config->csc_config.yuv2rgb_coef.uv_offset = 0x180;
-            config->csc_config.yuv2rgb_coef.y_offset = 0x1F0;
-            config->csc_config.yuv2rgb_coef.c1 = 0x198;
-            config->csc_config.yuv2rgb_coef.c2 = 0x730;
-            config->csc_config.yuv2rgb_coef.c3 = 0x79C;
-            config->csc_config.yuv2rgb_coef.c4 = 0x204;
-            break;
-        default:
-            config->csc_config.enable = false;
-            config->csc_config.ycbcr_mode = false;
-            config->csc_config.yuv2rgb_coef.c0 = 0;
-            config->csc_config.yuv2rgb_coef.uv_offset = 0;
-            config->csc_config.yuv2rgb_coef.y_offset = 0;
-            config->csc_config.yuv2rgb_coef.c1 = 0;
-            config->csc_config.yuv2rgb_coef.c2 = 0;
-            config->csc_config.yuv2rgb_coef.c3 = 0;
-            config->csc_config.yuv2rgb_coef.c4 = 0;
-            break;
+    switch (pixel_format) {
+    case display_pixel_format_yuv422:
+        config->csc_config.enable = true;
+        config->csc_config.ycbcr_mode = false;
+        config->csc_config.yuv2rgb_coef.c0 = 0x100;
+        config->csc_config.yuv2rgb_coef.uv_offset = 0;
+        config->csc_config.yuv2rgb_coef.y_offset = 0;
+        config->csc_config.yuv2rgb_coef.c1 = 0x123;
+        config->csc_config.yuv2rgb_coef.c2 = 0x76B;
+        config->csc_config.yuv2rgb_coef.c3 = 0x79C;
+        config->csc_config.yuv2rgb_coef.c4 = 0x208;
+        break;
+    case display_pixel_format_ycbcr422:
+        config->csc_config.enable = true;
+        config->csc_config.ycbcr_mode = true;
+        config->csc_config.yuv2rgb_coef.c0 = 0x12A;
+        config->csc_config.yuv2rgb_coef.uv_offset = 0x180;
+        config->csc_config.yuv2rgb_coef.y_offset = 0x1F0;
+        config->csc_config.yuv2rgb_coef.c1 = 0x198;
+        config->csc_config.yuv2rgb_coef.c2 = 0x730;
+        config->csc_config.yuv2rgb_coef.c3 = 0x79C;
+        config->csc_config.yuv2rgb_coef.c4 = 0x204;
+        break;
+    default:
+        config->csc_config.enable = false;
+        config->csc_config.ycbcr_mode = false;
+        config->csc_config.yuv2rgb_coef.c0 = 0;
+        config->csc_config.yuv2rgb_coef.uv_offset = 0;
+        config->csc_config.yuv2rgb_coef.y_offset = 0;
+        config->csc_config.yuv2rgb_coef.c1 = 0;
+        config->csc_config.yuv2rgb_coef.c2 = 0;
+        config->csc_config.yuv2rgb_coef.c3 = 0;
+        config->csc_config.yuv2rgb_coef.c4 = 0;
+        break;
     }
 }
 

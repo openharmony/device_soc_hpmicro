@@ -55,6 +55,9 @@ _start:
     #define HANDLER_TRAP irq_handler_trap
 #else
     #define HANDLER_TRAP freertos_risc_v_trap_handler
+
+    /* Use mscratch to store isr level */
+    csrw mscratch, 0
 #endif
 
 #ifndef USE_NONVECTOR_MODE

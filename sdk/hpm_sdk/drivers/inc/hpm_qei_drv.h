@@ -272,8 +272,7 @@ static inline bool qei_get_bit_status(QEI_Type *qei_x, uint32_t mask)
 {
     if ((qei_x->SR & mask) == mask) {
         return true;
-    }
-    else{
+    } else {
         return false;
     }
 }

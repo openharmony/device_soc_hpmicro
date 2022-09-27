@@ -165,7 +165,7 @@ typedef struct {
     uint8_t enable_differential_clk;        /**< Enable differential clock */
     uint8_t reserved1[5];                   /**< Reserved */
     uint32_t access_flags;                  /**< Access flags */
-}xpi_config_t;
+} xpi_config_t;
 
 /**
  * @brief XPI Device Configuration structure

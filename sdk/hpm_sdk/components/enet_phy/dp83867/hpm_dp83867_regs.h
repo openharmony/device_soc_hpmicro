@@ -200,7 +200,7 @@
  * occurrence of a link failure condition will causes the Link Status bit
  * to clear. Once cleared, this bit may only be set by establishing a
  * good link condition and a read through the management interface.
-*/
+ */
 #define DP83867_BMSR_LINK_STATUS_MASK  (0x0004U)
 #define DP83867_BMSR_LINK_STATUS_SHIFT (2U)
 #define DP83867_BMSR_LINK_STATUS_GET(x) (((uint32_t)(x) & DP83867_BMSR_LINK_STATUS_MASK) >> DP83867_BMSR_LINK_STATUS_SHIFT)

@@ -68,7 +68,7 @@ static bool jpeg_is_valid_size(uint8_t format, uint32_t width, uint32_t height)
     uint32_t align;
     if (format > ARRAY_SIZE(jpeg_supported_sampling)) {
         return false;
-    } 
+    }
     align = jpeg_supported_sampling[format].hy * 8;
     if (width % align) {
         return false;
@@ -108,7 +108,7 @@ static void jpeg_config_interal_regs(JPEG_Type *ptr,
     }
     ptr->IMGREG2 = JPEG_IMGREG2_NMCU_SET(macro_block_count - 1);
     ptr->IMGREG3 = JPEG_IMGREG3_NRST_SET(1);
-    ptr->IMGREG[0] = JPEG_IMGREG_NBLOCK_SET(hy * vy -1);
+    ptr->IMGREG[0] = JPEG_IMGREG_NBLOCK_SET(hy * vy - 1);
     if (format == JPEG_SUPPORTED_FORMAT_400) {
         ptr->IMGREG[1] = 0;
         ptr->IMGREG[2] = 0;
@@ -147,7 +147,7 @@ hpm_stat_t jpeg_start_encode(JPEG_Type *ptr, jpeg_job_config_t *config)
         | JPEG_INDMA_MISC_PACK_DIR_SET(config->byte_order)
         | JPEG_INDMA_MISC_MAX_OT_SET(4)
         | JPEG_INDMA_MISC_INDMA2D_MASK
-        | JPEG_INDMA_MISC_IN_DMA_REQ_MASK ;
+        | JPEG_INDMA_MISC_IN_DMA_REQ_MASK;
 
     ptr->INDMA_CTRL0 = JPEG_INDMA_CTRL0_TTLEN_SET(total_bytes)
         | JPEG_INDMA_CTRL0_PITCH_SET(config->width_in_pixel * jpeg_get_pixel_size(config->in_pixel_format));
@@ -237,7 +237,6 @@ hpm_stat_t jpeg_start_decode(JPEG_Type *ptr,
     ptr->INDMABASE = JPEG_INDMABASE_ADDR_SET(config->in_buffer);
     /* TODO: check if it has to use the compressed length */
     ptr->INDMA_CTRL0 = JPEG_INDMA_CTRL0_TTLEN_SET(length);
-    ptr->INDMA_CTRL1 = JPEG_INDMA_CTRL1_ROWLEN_SET(length >> 16);
     ptr->INXT_CMD = JPEG_INXT_CMD_ADDR_SET(0x14) | JPEG_INXT_CMD_OP_VALID_MASK;
 
     /* output DMA setting */

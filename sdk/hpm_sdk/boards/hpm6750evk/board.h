@@ -479,6 +479,7 @@ uint32_t board_init_adc16_clock(ADC16_Type *ptr);
 
 uint32_t board_init_can_clock(CAN_Type *ptr);
 
+hpm_stat_t board_set_audio_pll_clock(uint32_t freq);
 uint32_t board_init_i2s_clock(I2S_Type *ptr);
 uint32_t board_init_pdm_clock(void);
 uint32_t board_init_dao_clock(void);
@@ -494,6 +495,7 @@ void board_init_adc16_pins(void);
 void board_init_usb_pins(void);
 void board_usb_vbus_ctrl(uint8_t usb_index, uint8_t level);
 
+hpm_stat_t board_reset_enet_phy(ENET_Type *ptr);
 hpm_stat_t board_init_enet_pins(ENET_Type *ptr);
 hpm_stat_t board_init_enet_rmii_reference_clock(ENET_Type *ptr, bool internal);
 hpm_stat_t board_init_enet_rgmii_clock_delay(ENET_Type *ptr);

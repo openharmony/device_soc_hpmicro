@@ -260,6 +260,18 @@ static inline uint32_t dma_check_transfer_status(DMA_Type *ptr, uint8_t ch_index
 }
 
 /**
+ * @brief   Clear transfer status
+ *
+ * @param[in] ptr DMA base address
+ * @param[in] ch_index Target channel index
+ *
+ */
+static inline void dma_clear_transfer_status(DMA_Type *ptr, uint8_t ch_index)
+{
+    ptr->INTSTATUS &= ~((1 << (DMA_STATUS_TC_SHIFT + ch_index)) | (1 << (DMA_STATUS_ERROR_SHIFT + ch_index)) | (1 << (DMA_STATUS_ABORT_SHIFT + ch_index)));
+}
+
+/**
  * @brief Enable DMA Channel interrupt
  *
  * @param [in] ptr DMA base address
@@ -331,11 +343,12 @@ void dma_default_channel_config(DMA_Type *ptr, dma_channel_config_t *ch);
  * @param[in] ptr DMA base address
  * @param[in] ch_index Target channel index to be configured
  * @param[in] ch Channel config
+ * @param[in] start_transfer Set true to start transfer
  *
  * @return  status_success if everything is okay
  */
 hpm_stat_t dma_setup_channel(DMA_Type *ptr, uint32_t ch_index,
-                            dma_channel_config_t *ch);
+                            dma_channel_config_t *ch, bool start_transfer);
 /**
  * @brief   Start DMA copy
  *
@@ -358,10 +371,11 @@ hpm_stat_t dma_start_memcpy(DMA_Type *ptr, uint8_t ch_index,
  *
  * @param[in] ptr DMA base address
  * @param[in] pconfig dma handshake config pointer
+ * @param[in] start_transfer Set true to start transfer
  *
- * @return status_success if everthing is okay
+ * @return status_success if everything is okay
  */
-hpm_stat_t dma_setup_handshake(DMA_Type *ptr,  dma_handshake_config_t *pconfig);
+hpm_stat_t dma_setup_handshake(DMA_Type *ptr,  dma_handshake_config_t *pconfig, bool start_transfer);
 
 #ifdef __cplusplus
 }

@@ -8,6 +8,7 @@
 #ifndef HPM_SPI_DRV_H
 #define HPM_SPI_DRV_H
 #include "hpm_spi_regs.h"
+#include "hpm_soc_feature.h"
 
 /**
  * @brief SPI driver APIs
@@ -15,6 +16,35 @@
  * @ingroup io_interfaces
  * @{
  */
+
+/**
+ * @brief spi dma enable
+ */
+typedef enum {
+    spi_tx_dma_enable = SPI_CTRL_TXDMAEN_MASK,
+    spi_rx_dma_enable = SPI_CTRL_RXDMAEN_MASK
+} spi_dma_enable_t;
+
+/**
+ * @brief spi interrupt mask
+ */
+typedef enum {
+    spi_rx_fifo_overflow_int  = SPI_INTREN_RXFIFOORINTEN_MASK,
+    spi_tx_fifo_underflow_int = SPI_INTREN_TXFIFOURINTEN_MASK,
+    spi_rx_fifo_threshold_int = SPI_INTREN_RXFIFOINTEN_MASK,
+    spi_tx_fifo_threshold_int = SPI_INTREN_TXFIFOINTEN_MASK,
+    spi_end_int               = SPI_INTREN_ENDINTEN_MASK,
+    spi_slave_cmd_int         = SPI_INTREN_SLVCMDEN_MASK,
+} spi_interrupt_t;
+
+/**
+ * @brief spi data length in bit
+ */
+typedef enum {
+    spi_data_length_8_bits = 7,
+    spi_data_length_16_bits = 15,
+    spi_data_length_31_bits = 30
+} spi_data_length_in_bits_t;
 
 /**
  * @brief spi mode selection
@@ -270,15 +300,15 @@ void spi_format_init(SPI_Type *ptr, spi_format_config_t *config);
  * @param [in] cmd spi transfer mode
  * @param [in] addr spi transfer target address
  * @param [in] wbuff spi sent data buff address
- * @param [in] wsize spi sent data size in byte
+ * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @param [in] rbuff spi receive data buff address
- * @param [in] rsize spi receive data size
+ * @param [in] rcount spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @retval hpm_stat_t status_success if spi transfer without any error
  */
 hpm_stat_t spi_transfer(SPI_Type *ptr,
                         spi_control_config_t *config,
                         uint8_t *cmd, uint32_t *addr,
-                        uint8_t *wbuff, uint32_t wsize,  uint8_t *rbuff, uint32_t rsize);
+                        uint8_t *wbuff, uint32_t wcount,  uint8_t *rbuff, uint32_t rcount);
 
 /**
  * @brief spi setup dma transfer
@@ -287,14 +317,14 @@ hpm_stat_t spi_transfer(SPI_Type *ptr,
  * @param [in] config spi_control_config_t
  * @param [in] cmd spi transfer mode
  * @param [in] addr spi transfer target address
- * @param [in] wsize spi sent data size in byte
- * @param [in] rsize spi receive data size
+ * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @param [in] rcount spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @retval hpm_stat_t status_success if spi setup dma transfer without any error
  */
 hpm_stat_t spi_setup_dma_transfer(SPI_Type *ptr,
                         spi_control_config_t *config,
                         uint8_t *cmd, uint32_t *addr,
-                        uint32_t wsize, uint32_t rsize);
+                        uint32_t wcount, uint32_t rcount);
 
 /**
  * @brief spi wait for idle status
@@ -311,6 +341,152 @@ hpm_stat_t spi_wait_for_idle_status(SPI_Type *ptr);
  * @retval hpm_stat_t status_success if spi in busy status
  */
 hpm_stat_t spi_wait_for_busy_status(SPI_Type *ptr);
+
+/**
+ * @brief Enables the SPI DMA request.
+ *
+ * This function configures the Rx and Tx DMA mask of the SPI. The parameters are base and a DMA mask.
+ *
+ * @param base SPI base address.
+ * @param mask The dma enable mask; Use the spi_dma_enable_t.
+ */
+static inline void spi_enable_dma(SPI_Type *ptr, uint32_t mask)
+{
+    ptr->CTRL |= mask;
+}
+
+/*!
+ * @brief Disables the SPI DMA request.
+ *
+ * This function configures the Rx and Tx DMA mask of the SPI.  The parameters are base and a DMA mask.
+ *
+ * @param base SPI base address.
+ * @param mask The dma enable mask; Use the spi_dma_enable_t.
+ */
+static inline void spi_disable_dma(SPI_Type *ptr, uint32_t mask)
+{
+    ptr->CTRL &= ~mask;
+}
+
+/**
+ * @brief Get the SPI interrupt status.
+ *
+ * This function gets interrupt status of the SPI.
+ *
+ * @param base SPI base address.
+ * @retval SPI interrupt status register value
+ */
+static inline uint32_t spi_get_interrupt_status(SPI_Type *ptr)
+{
+    return ptr->INTRST;
+}
+
+/**
+ * @brief Clear the SPI interrupt status.
+ *
+ * This function clears interrupt status of the SPI.
+ *
+ * @param base SPI base address.
+ * @param mask The interrupt mask; Use the spi_interrupt_t.
+ *
+ */
+static inline void spi_clear_interrupt_status(SPI_Type *ptr, uint32_t mask)
+{
+    /* write 1 to clear */
+    ptr->INTRST |= mask;
+}
+
+/**
+ * @brief Enables the SPI interrupt.
+ *
+ * This function configures interrupt of the SPI. The parameters are base and a interrupt mask.
+ *
+ * @param base SPI base address.
+ * @param mask The interrupt mask; Use the spi_interrupt_t.
+ */
+static inline void spi_enable_interrupt(SPI_Type *ptr, uint32_t mask)
+{
+    ptr->INTREN |= mask;
+}
+
+/*!
+ * @brief Disables the SPI interrupt.
+ *
+ * This function configures interrupt of the SPI. The parameters are base and a interrupt mask.
+ *
+ * @param base SPI base address.
+ * @param mask The interrupt mask; Use the spi_interrupt_t.
+ */
+static inline void spi_disable_interrupt(SPI_Type *ptr, uint32_t mask)
+{
+    ptr->INTREN &= ~mask;
+}
+
+/**
+ * @brief spi write and read data
+ *
+ * @note Call this function after SPI CONTROL is configured by spi_control_init.
+ * The order of reading and writing is controlled by spi_control_init.
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] datalen data length in bit, use the spi_data_length_in_bits_t
+ * @param [in] wbuff spi sent data buff address
+ * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @param [in] rbuff spi receive data buff address
+ * @param [in] rcount spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_write_read_data(SPI_Type *ptr, uint8_t datalen, uint8_t *wbuff, uint32_t wcount, uint8_t *rbuff, uint32_t rcount);
+
+/**
+ * @brief spi read data
+ *
+ * @note Call this function after SPI CONTROL is configured by spi_control_init.
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] datalen data length in bit, use the spi_data_length_in_bits_t
+ * @param [in] buff spi receive data buff address
+ * @param [in] count spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_read_data(SPI_Type *ptr, uint8_t datalen, uint8_t *buff, uint32_t count);
+
+/**
+ * @brief spi write data
+ *
+ * @note Call this function after SPI CONTROL is configured by spi_control_init.
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] datalen data length in bit, use the spi_data_length_in_bits_t
+ * @param [in] buff spi sent data buff address
+ * @param [in] count spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_write_data(SPI_Type *ptr, uint8_t datalen, uint8_t *buff, uint32_t count);
+
+/**
+ * @brief spi write command
+ *
+ * @note Call this function after SPI CONTROL is configured by spi_control_init.
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] mode spi mode, use the spi_mode_selection_t
+ * @param [in] config point to spi_control_config_t
+ * @param [in] cmd command data address
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_write_command(SPI_Type *ptr, spi_mode_selection_t mode, spi_control_config_t *config, uint8_t *cmd);
+
+/**
+ * @brief spi control initialization
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] config point to spi_control_config_t
+ * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @param [in] rcount spi receive count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_control_init(SPI_Type *ptr, spi_control_config_t *config, uint32_t wcount, uint32_t rcount);
 
 /**
  * @}

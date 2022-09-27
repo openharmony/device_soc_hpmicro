@@ -9,7 +9,7 @@
 #define HPM_TRGM_DRV_H
 
 #include "hpm_common.h"
-#include "hpm_trgm_drv.h"
+#include "hpm_trgm_regs.h"
 #include "hpm_trgmmux_src.h"
 
 /**

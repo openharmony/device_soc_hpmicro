@@ -72,7 +72,7 @@ static hpm_stat_t adc16_do_calibration(ADC16_Type *ptr)
     ptr->CONV_CFG1 = (ptr->CONV_CFG1 & ~ADC16_CONV_CFG1_CLOCK_DIVIDER_MASK)
                    | ADC16_CONV_CFG1_CLOCK_DIVIDER_SET(clk_div_temp);
 
-    for(j = 0; j < 4; j++) {
+    for (j = 0; j < 4; j++) {
         /* Set startcal */
         ptr->ANA_CTRL0 |= ADC16_ANA_CTRL0_STARTCAL_MASK;
 
@@ -80,7 +80,8 @@ static hpm_stat_t adc16_do_calibration(ADC16_Type *ptr)
         ptr->ANA_CTRL0 &= ~ADC16_ANA_CTRL0_STARTCAL_MASK;
 
         /* Polling calibration status */
-        while (ADC16_ANA_STATUS_CALON_GET(ptr->ANA_STATUS)) {}
+        while (ADC16_ANA_STATUS_CALON_GET(ptr->ANA_STATUS)) {
+        }
 
         /* Read parameters */
         for (i = 0; i < ADC16_SOC_PARAMS_LEN; i++) {
