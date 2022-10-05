@@ -105,7 +105,7 @@ __attribute__((weak)) void reset_handler(void)
 
 #if !defined(__SEGGER_RTL_VERSION) || defined(__GNU_LINKER)
     /* Do global constructors */
-    __libc_init_array();
+    //__libc_init_array();
 #endif
 
     /* Entry function */
