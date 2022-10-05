@@ -83,7 +83,7 @@ HPM6700/6400 系列 MCU 是来自上海先楫半导体科技有限公司的高�
 说明： 如果直接采用编译好的riscv32 gcc包，请先执行以下命令将压缩包解压到用户的home(也可以是其他目录，注意使用实际的PATH即可)：
 
 ```bash
-tar -xvf gcc_riscv32-linux-7.3.0.tar.gz -C ~`
+tar -xvf gcc_riscv32-linux-7.3.0.tar.gz -C ~
 ```
 
 将以下命令拷贝到`.bashrc`文件的最后一行，保存并退出。
@@ -222,8 +222,11 @@ index 734a22081..4b5b65562 100755
 1. 将开发板的`USB2UART0`接口连接至PC，正确连接后，PC可识别到一路usb串口，hpm6750evk2板载了ch340 usb转串口芯片。
 
 2. 将BOOT拨码开关设置为:
+
 boot0: 0
+
 boot1: 1
+
 拨码开关设置好后，点击开发板的`RESTN`按钮，进行复位，复位后进入到isp模式。
 
 3. HPMProgrammer的`Port Configuration`选择步骤1识别到的串口，点击`Attach`按钮，在ISP模式下可识别到开发板：
@@ -236,7 +239,9 @@ boot1: 1
 ![固件下载](figures/download_success.png)
 
 6. 设置拨码开关为正常模式
+
 boot0: 0
+
 boot1: 0
 
 7. 打开一个串口终端，重启开发板，串口打印启动信息
@@ -246,7 +251,9 @@ boot1: 0
 ## 相关仓库
 
 [vendor_hpmicro](https://gitee.com/openharmony-sig/vendor_hpmicro)
+
 [device_soc_hpmicro](https://gitee.com/openharmony-sig/device_soc_hpmicro)
+
 [device_board_hpmicro](https://gitee.com/openharmony-sig/device_board_hpmicro)
 
 ## 联系
