@@ -1,7 +1,9 @@
-/*  */
-/* Created by hpm15 on 3/11/21. */
-/*  */
-
+/*
+ * Copyright (c) 2021 hpmicro
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
 #ifndef SFDP_DEF_H
 #define SFDP_DEF_H
 

@@ -20,6 +20,8 @@ cd middleware
 rm -rf coremark  fatfs  FreeRTOS   libjpeg-turbo  littlevgl  lwip  tflm  tinycrypt  tinyusb erpc segger_rtt hpm_math
 cd ..
 
+rm -rf soc/*/toolchains/segger
+
 cd ..
 
 

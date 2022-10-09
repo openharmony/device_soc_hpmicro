@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2021 hpmicro
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
 #ifndef HPM_ROMAPI_XPI_RAM_DEF_H
 #define HPM_ROMAPI_XPI_RAM_DEF_H
 
