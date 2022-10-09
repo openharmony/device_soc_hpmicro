@@ -17,7 +17,7 @@ cd hpm_sdk
 
 rm -rf .git doc samples cmake scripts env.cmd  env.sh  index.md  index_zh.md README.md  README_zh.md
 cd middleware
-rm -rf coremark  fatfs  FreeRTOS   libjpeg-turbo  littlevgl  lwip  tflm  tinycrypt  tinyusb erpc segger_rtt
+rm -rf coremark  fatfs  FreeRTOS   libjpeg-turbo  littlevgl  lwip  tflm  tinycrypt  tinyusb erpc segger_rtt hpm_math
 cd ..
 
 cd ..
