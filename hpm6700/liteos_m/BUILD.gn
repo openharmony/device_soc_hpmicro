@@ -29,7 +29,8 @@ kernel_module(module_name) {
   include_dirs = [ 
     "//utils/native/lite/memory/include",
     "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
-    "//base/hiviewdfx/hilog_lite/frameworks/mini"
+    "//base/hiviewdfx/hilog_lite/frameworks/mini",
+    "//commonlibrary/utils_lite/include"
   ]
 }
 

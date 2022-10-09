@@ -18,6 +18,7 @@ static_library("hal_file_static") {
 
   include_dirs = [
     "//commonlibrary/utils_lite/hals/file",
+    "//commonlibrary/utils_lite/include",
     "//kernel/liteos_m",
   ]
 }

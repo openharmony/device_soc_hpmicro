@@ -232,7 +232,7 @@ boot1: 1
 3. HPMProgrammer的`Port Configuration`选择步骤1识别到的串口，点击`Attach`按钮，在ISP模式下可识别到开发板：
 ![Attach开发板](figures/attach_success.png)
 
-4. 拷贝编译好的固件程序`out/hpm6750evk/hpm6750evk2/OHOS_Image.bin`到windows。
+4. 拷贝编译好的固件程序`out/hpm6750evk2/hpm6750evk2/OHOS_Image.bin`到windows。
 
 5. 点击`Open File`选择固件程序，点击`Program`进行下载:
 
