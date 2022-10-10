@@ -29,7 +29,7 @@
 
 #define ROOT_LEN         2
 #define MAX_PATH_LEN     40
-#define MaxOpenFile      33
+#define MaxOpenFile      32
 #define ROOT_PATH        "/data"
 
 typedef struct _File_Context {
