@@ -25,3 +25,12 @@ __attribute__((weak)) void IoTWatchDogKick(void)
 {
 }
 
+__attribute__((weak)) void IoTWatchDogEnable(void)
+{
+
+}
+
+__attribute__((weak)) void IoTWatchDogDisable(void)
+{
+
+}
