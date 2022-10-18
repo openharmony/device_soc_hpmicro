@@ -23,23 +23,15 @@
         <policylist>
             <policy name="projectPolicy" desc="">
                 <policyitem type="copyright" name="HPMicro" path=".*" desc="original hpmicro copyright"/>
-                <policyitem type="copyright" name="Copyright (c) 2022 HPMicro." path=".*" desc="original hpmicro  copyright"/>
                 <policyitem type="copyright" name="Copyright (c) 2022 HPMicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright (c) 2021 - 2022 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright (c) 2021 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright (c) 2022 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright (c) 2021-2022 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright 2021-2022 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright 2022 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright 2021 hpmicro" path=".*" desc="original hpmicro  copyright"/>
-                <policyitem type="copyright" name="Copyright 2016-2019 NXP" path=".*" desc="original hpmicro  copyright"/>
+                <policyitem type="copyright" name="Copyright 2016-2019 NXP" path=".*" desc="original NXP  copyright"/>
 		<policyitem type="license" name="BSD-3-Clause" path=".*" desc="hpmicro use BSD license"/>
 		<policyitem type="license" name="Apache-2.0" path=".*" desc="hpmicro use apache 2.0 license"/>
             </policy>
         </policylist>
         <filefilterlist>
             <filefilter name="defaultFilter" desc="Filters for binary file policies" >
-                <filteritem type="filename" name="*.a|*.so|*.bin|*.png|*.xml" desc="Temp files"/>
+                <filteritem type="filename" name="*png|*.xml|*.yaml|*.list" desc="Temp files"/>
                 <filteritem type="filepath" name="sdk/hpm_sdk/VERSION" desc="hpmicro open source SDK code version"/>
 	        </filefilter>
         </filefilterlist>
