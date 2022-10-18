@@ -109,41 +109,11 @@ Thread model: single
 gcc version 7.3.0 (GCC)
 ```
 
-
 ### 源码获取
 
 #### 参考如下链接获取OpenHarmony源码
 
 [代码获取](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/device-dev/get-code/sourcecode-acquire.md)
-
-**注意:需要使用master分支或者[OpenHarmony v3.2 Beta3](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/release-notes/Readme.md)及以上版本**
-
-#### 从sig获取先楫hpm6750适配源码
-
-**soc仓获取**
-
-在ohos源码树的`device/soc/`目录下执行如下命令：
-
-```bash
-git clone https://gitee.com/openharmony-sig/device_soc_hpmicro.git -b master hpmicro
-```
-
-
-**board仓获取**
-
-在ohos源码树的`device/board/`目录下执行如下命令：
-
-```bash
-git clone https://gitee.com/openharmony-sig/device_board_hpmicro.git -b master hpmicro
-```
-
-**vendor仓获取**
-
-在ohos源码树的`vendor/`目录下执行如下命令：
-
-```bash
-git clone https://gitee.com/openharmony-sig/vendor_hpmicro.git -b master hpmicro
-```
 
 
 ## 工程编译
@@ -252,15 +222,15 @@ index 734a22081..4b5b65562 100755
 
 ## 相关仓库
 
-[vendor_hpmicro](https://gitee.com/openharmony-sig/vendor_hpmicro)
+[vendor_hpmicro](https://gitee.com/openharmony/vendor_hpmicro)
 
-[device_soc_hpmicro](https://gitee.com/openharmony-sig/device_soc_hpmicro)
+[device_soc_hpmicro](https://gitee.com/openharmony/device_soc_hpmicro)
 
-[device_board_hpmicro](https://gitee.com/openharmony-sig/device_board_hpmicro)
+[device_board_hpmicro](https://gitee.com/openharmony/device_board_hpmicro)
 
 ## 联系
 
-如果您在开发过程中有问题，请在仓库[issues](https://gitee.com/openharmony-sig/device_soc_hpmicro/issues)提问。
+如果您在开发过程中有问题，请在仓库[issues](https://gitee.com/openharmony/device_soc_hpmicro/issues)提问。
 
 
 
