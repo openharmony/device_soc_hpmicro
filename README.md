@@ -71,7 +71,7 @@ HPM6700/6400 系列 MCU 是来自上海先楫半导体科技有限公司的高�
 
 ### OpenHarmony开发环境搭建
 
-[环境搭建](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/device-dev/quick-start/quickstart-lite-env-setup.md)
+[环境搭建](https://gitee.com/openharmony/docs/blob/OpenHarmony-v3.2-Beta3/zh-cn/device-dev/quick-start/quickstart-lite-env-setup.md)
 
 ### 编译工具安装
 
