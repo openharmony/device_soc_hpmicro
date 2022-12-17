@@ -13,13 +13,7 @@
  * limitations under the License.
  */
 
-#include "los_fs.h"
 #include "adapter.h"
-
-__attribute__((weak)) int access(const char *pathname, int mode)
-{
-    return LOS_Access(pathname, mode);
-}
 
 __attribute__((weak)) void IoTWatchDogKick(void)
 {

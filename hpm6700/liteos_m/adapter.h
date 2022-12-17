@@ -15,4 +15,8 @@
 #ifndef LITEOS_M_ADAPTER_H
 #define LITEOS_M_ADAPTER_H
 
+extern void IoTWatchDogKick(void);
+extern void IoTWatchDogEnable(void);
+extern void IoTWatchDogDisable(void);
+
 #endif
