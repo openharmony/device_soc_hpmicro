@@ -46,15 +46,13 @@ static void dputs(char const *s, int (*pFputc)(int n, void *file), void *file)
     LOS_IntRestore(intSave);
 }
 
-#define BUFSIZE 256
-static char logBuf[1024];
 #ifdef LOSCFG_LIBC_NEWLIB
 int __wrap_printf(char const  *fmt, ...)
 #else /* LOSCFG_LIBC_NEWLIB */
 int printf(char const  *fmt, ...)
 #endif /* LOSCFG_LIBC_NEWLIB */
 {
-    unsigned int intSave = LOS_IntLock();
+    char logBuf[256];
     va_list sap;
     va_start(sap, fmt);
     int len = vsnprintf_s(logBuf, sizeof(logBuf), sizeof(logBuf) - 1, fmt, sap);   
@@ -64,7 +62,6 @@ int printf(char const  *fmt, ...)
     } else {
         dputs("printf error!\n", UartPutc, 0);
     }
-    LOS_IntRestore(intSave);
     return len;
 }
 

@@ -38,16 +38,6 @@ void _fini(void) {}
 extern void __libc_fini_array (void);
 extern void __libc_init_array(void);
 
-
-boolean HilogProc_Impl(const HiLogContent *hilogContent, uint32 len)
-{
-    char tempOutStr[128] = {0};
-    if (LogContentFmt(tempOutStr, sizeof(tempOutStr), (const uint8 *)hilogContent) > 0) {
-        printf(tempOutStr);
-    }
-    return TRUE;
-}
-
 /*****************************************************************************
  Function    : main
  Description : Main function entry
@@ -92,8 +82,6 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
     }
 
     OHOS_SystemInit();
-    /* register hilog output func for mini */
-    HiviewRegisterHilogProc(HilogProc_Impl);
 
 #if (LOSCFG_USE_SHELL == 1)
     ret = LosShellInit();
