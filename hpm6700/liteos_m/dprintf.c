@@ -52,7 +52,7 @@ int __wrap_printf(char const  *fmt, ...)
 int printf(char const  *fmt, ...)
 #endif /* LOSCFG_LIBC_NEWLIB */
 {
-    char logBuf[256];
+    char logBuf[1024];
     va_list sap;
     va_start(sap, fmt);
     int len = vsnprintf_s(logBuf, sizeof(logBuf), sizeof(logBuf) - 1, fmt, sap);   
