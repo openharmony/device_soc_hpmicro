@@ -135,46 +135,6 @@ gcc version 7.3.0 (GCC)
 
 执行`hb build -f --gn-args="build_xts=true"`命令进行xts编译。
 
-注意:编译xts需要需要打如下补丁，修改线程栈为1800，否则会出现栈溢出崩溃
-
-```bash
-diff --git a/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_singletask_func_test.c b/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_singletask_func_test.c
-index 7fc006e18..dd66409e9 100755
---- a/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_singletask_func_test.c
-+++ b/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_singletask_func_test.c
-@@ -201,7 +201,7 @@ static TaskConfig GetTaskConfig(Service *service)
-     // queueSize: [0, system upper limit), 0: will not create taskpool, the max value depends on RAM size
-     // priority: PRI_ABOVE_NORMAL PRI_NORMAL PRI_BELOW_NORMAL PRI_LOW
- 
--    TaskConfig config = { LEVEL_HIGH, PRI_NORMAL, 1600, 2, SINGLE_TASK };
-+    TaskConfig config = { LEVEL_HIGH, PRI_NORMAL, 1800, 2, SINGLE_TASK };
-     if (service == (Service *)&g_service[INDEX0]) {
-         config.priority = PRI_LOW;
-     } else if (service == (Service *)&g_service[INDEX1]) {
-@@ -571,4 +571,4 @@ LITE_TEST_CASE(SingleTaskFuncTestSuite, testSingleTask0050, Function | MediumTes
-     }
- };
- 
-diff --git a/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_specifiedtask_func_test.c b/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_specifiedtask_func_test.c
-index 734a22081..4b5b65562 100755
---- a/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_specifiedtask_func_test.c
-+++ b/distributed_schedule_lite/system_ability_manager_hal/src/taskpool_specifiedtask_func_test.c
-@@ -148,7 +148,7 @@ static BOOL MessageHandle(Service *service, Request *msg)
- static TaskConfig GetTaskConfig(Service *service)
- {
-     (void)service;
--    TaskConfig config = {LEVEL_HIGH, PRI_NORMAL, 1600, 20, SPECIFIED_TASK};
-+    TaskConfig config = {LEVEL_HIGH, PRI_NORMAL, 1800, 20, SPECIFIED_TASK};
-     return config;
- }
- 
-@@ -400,4 +400,4 @@ LITE_TEST_CASE(SpecifiedTaskFuncTestSuite, testSpecifiedTask0030, Function | Med
-     osDelay(OPER_INTERVAL);
-     TEST_ASSERT_EQUAL_INT(g_servicePoint1 == g_servicePoint2, TRUE);
- };
-
-```
-
 ## 镜像烧录
 
 ### 下载安装烧录工具(windows)
