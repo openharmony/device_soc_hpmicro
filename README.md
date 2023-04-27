@@ -75,7 +75,7 @@ HPM6700/6400 系列 MCU 是来自上海先楫半导体科技有限公司的高�
 
 ### 编译工具安装
 
-[编译器安装:gcc_riscv32](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/device-dev/quick-start/quickstart-lite-steps-hi3861-setting.md#section34435451256) 或者直接下载 [可直接下载](https://repo.huaweicloud.com/harmonyos/compiler/gcc_riscv32/7.3.0/linux/gcc_riscv32-linux-7.3.0.tar.gz)
+[编译器安装:gcc_riscv32](https://gitee.com/openharmony/docs/blob/OpenHarmony-v3.2-Beta5/zh-cn/device-dev/quick-start/quickstart-pkg-3861-tool.md#%E5%AE%89%E8%A3%85gcc_riscv32wlan%E6%A8%A1%E7%BB%84%E7%B1%BB%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE) 或者直接下载 [可直接下载](https://repo.huaweicloud.com/harmonyos/compiler/gcc_riscv32/7.3.0/linux/gcc_riscv32-linux-7.3.0.tar.gz)
 
 
 **设置环境变量**
