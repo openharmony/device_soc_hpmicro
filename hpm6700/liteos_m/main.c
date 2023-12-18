@@ -67,14 +67,6 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
 #if defined(LOSCFG_SUPPORT_LITTLEFS)
     HpmLittlefsInit();
 #endif
-
-    /*
-     * Init c++ env
-     * To call:
-     * param_client.c: __attribute__((constructor)) static void ClientInit(void);
-     * 
-     */
-    __libc_init_array();
     
     printf("\nDeviceManagerStart start ...\n");
     if (DeviceManagerStart()) {

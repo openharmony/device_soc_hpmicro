@@ -46,11 +46,7 @@ static void dputs(char const *s, int (*pFputc)(int n, void *file), void *file)
     LOS_IntRestore(intSave);
 }
 
-#ifdef LOSCFG_LIBC_NEWLIB
 int __wrap_printf(char const  *fmt, ...)
-#else /* LOSCFG_LIBC_NEWLIB */
-int printf(char const  *fmt, ...)
-#endif /* LOSCFG_LIBC_NEWLIB */
 {
     char logBuf[1024];
     va_list sap;
