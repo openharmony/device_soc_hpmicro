@@ -80,6 +80,12 @@ STATIC VOID OsMachineExternalInterrupt(VOID *arg)
 
 VOID HalPlicInit(VOID)
 {
+    HwiControllerOps *archHwiOps = ArchIntOpsGet();
+    archHwiOps->disableIrq = (UINT32 (*)(HWI_HANDLE_T ))HalIrqDisable;
+    archHwiOps->enableIrq = (UINT32 (*)(HWI_HANDLE_T ))HalIrqEnable;
+    archHwiOps->setIrqPriority = (UINT32 (*)(HWI_HANDLE_T , UINT8 ))HalSetLocalInterPri;
+
+
     UINT32 ret;
     ret = LOS_HwiCreate(RISCV_MACH_EXT_IRQ, 0x1, 0, OsMachineExternalInterrupt, 0);
     if (ret != LOS_OK) {
@@ -88,12 +94,6 @@ VOID HalPlicInit(VOID)
 
     HalIrqEnable(RISCV_MACH_EXT_IRQ);
 }
-
-HwiControllerOps g_archHwiOps = {
-    .disableIrq = (UINT32 (*)(HWI_HANDLE_T ))HalIrqDisable,
-    .enableIrq = (UINT32 (*)(HWI_HANDLE_T ))HalIrqEnable,
-    .setIrqPriority = (UINT32 (*)(HWI_HANDLE_T , UINT8 ))HalSetLocalInterPri,
-};
 
 
 #ifdef __cplusplus
