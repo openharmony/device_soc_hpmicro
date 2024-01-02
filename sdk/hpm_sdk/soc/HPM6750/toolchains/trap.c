@@ -48,6 +48,11 @@ __attribute__((weak)) void swi_isr(void)
 
 __attribute__((weak)) void syscall_handler(long n, long a0, long a1, long a2, long a3)
 {
+    (void) n;
+    (void) a0;
+    (void) a1;
+    (void) a2;
+    (void) a3;
 }
 
 __attribute__((weak)) long exception_handler(long cause, long epc)
@@ -88,7 +93,7 @@ __attribute__((weak)) long exception_handler(long cause, long epc)
     return epc;
 }
 
-#ifndef CONFIG_FREERTOS
+#if !defined(CONFIG_FREERTOS) && !defined(CONFIG_UCOS_III) && !defined(CONFIG_THREADX) && !defined(CONFIG_RTTHREAD)
 void irq_handler_trap(void) __attribute__ ((section(".isr_vector"), interrupt("machine"), aligned(4)));
 #else
 void irq_handler_trap(void) __attribute__ ((section(".isr_vector")));
@@ -98,7 +103,7 @@ void irq_handler_trap(void)
     long mcause = read_csr(CSR_MCAUSE);
     long mepc = read_csr(CSR_MEPC);
     long mstatus = read_csr(CSR_MSTATUS);
-#if SUPPORT_PFT_ARCH
+#if defined(SUPPORT_PFT_ARCH) && SUPPORT_PFT_ARCH
     long mxstatus = read_csr(CSR_MXSTATUS);
 #endif
 #ifdef __riscv_dsp
@@ -129,7 +134,7 @@ void irq_handler_trap(void)
         uint32_t irq_index = __plic_claim_irq(HPM_PLIC_BASE, HPM_PLIC_TARGET_M_MODE);
         if (irq_index) {
         /* Workaround: irq number returned by __plic_claim_irq might be 0, which is caused by plic. So skip invalid irq_index as a workaround */
-#ifndef DISABLE_IRQ_PREEMPTIVE
+#if !defined(DISABLE_IRQ_PREEMPTIVE) || (DISABLE_IRQ_PREEMPTIVE == 0)
             enable_global_irq(CSR_MSTATUS_MIE_MASK);
 #endif
             ((isr_func_t)__vector_table[irq_index])();
@@ -167,7 +172,7 @@ void irq_handler_trap(void)
     /* Restore CSR */
     write_csr(CSR_MSTATUS, mstatus);
     write_csr(CSR_MEPC, mepc);
-#if SUPPORT_PFT_ARCH
+#if defined(SUPPORT_PFT_ARCH) && SUPPORT_PFT_ARCH
     write_csr(CSR_MXSTATUS, mxstatus);
 #endif
 #ifdef __riscv_dsp

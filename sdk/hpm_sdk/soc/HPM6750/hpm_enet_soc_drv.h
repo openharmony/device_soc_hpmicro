@@ -35,9 +35,9 @@ static inline hpm_stat_t enet_enable_lpi_interrupt(ENET_Type *ptr)
     hpm_stat_t stat = status_success;
 
     if (ptr == HPM_ENET0) {
-        HPM_CONCTL->CTRL2 |= CONCTL_CTRL2_ENET0_LPI_INTR_EN_MASK;
+        HPM_CONCTL->CTRL2 |= CONCTL_CTRL2_ENET0_LPI_IRQ_EN_MASK;
     } else if (ptr == HPM_ENET1) {
-        HPM_CONCTL->CTRL3 |= CONCTL_CTRL3_ENET1_LPI_INTR_EN_MASK;
+        HPM_CONCTL->CTRL3 |= CONCTL_CTRL3_ENET1_LPI_IRQ_EN_MASK;
     } else {
         return status_invalid_argument;
     }
@@ -50,9 +50,9 @@ static inline hpm_stat_t enet_disable_lpi_interrupt(ENET_Type *ptr)
     hpm_stat_t stat = status_success;
 
     if (ptr == HPM_ENET0) {
-        HPM_CONCTL->CTRL2 &= ~CONCTL_CTRL2_ENET0_LPI_INTR_EN_MASK;
+        HPM_CONCTL->CTRL2 &= ~CONCTL_CTRL2_ENET0_LPI_IRQ_EN_MASK;
     } else if (ptr == HPM_ENET1) {
-        HPM_CONCTL->CTRL3 &= ~CONCTL_CTRL3_ENET1_LPI_INTR_EN_MASK;
+        HPM_CONCTL->CTRL3 &= ~CONCTL_CTRL3_ENET1_LPI_IRQ_EN_MASK;
     } else {
         return status_invalid_argument;
     }
@@ -66,10 +66,10 @@ static inline hpm_stat_t enet_rgmii_set_clock_delay(ENET_Type *ptr, uint8_t tx_d
 
     if (ptr == HPM_ENET0) {
         HPM_CONCTL->CTRL0 &= ~(CONCTL_CTRL0_ENET0_TXCLK_DLY_SEL_MASK | CONCTL_CTRL0_ENET0_RXCLK_DLY_SEL_MASK);
-        HPM_CONCTL->CTRL0 |= CONCTL_CTRL0_ENET0_RXCLK_DLY_SEL_SET(tx_delay) | CONCTL_CTRL0_ENET0_RXCLK_DLY_SEL_SET(rx_delay);
+        HPM_CONCTL->CTRL0 |= CONCTL_CTRL0_ENET0_TXCLK_DLY_SEL_SET(tx_delay) | CONCTL_CTRL0_ENET0_RXCLK_DLY_SEL_SET(rx_delay);
     } else if (ptr == HPM_ENET1) {
         HPM_CONCTL->CTRL0 &= ~(CONCTL_CTRL0_ENET1_TXCLK_DLY_SEL_MASK | CONCTL_CTRL0_ENET1_RXCLK_DLY_SEL_MASK);
-        HPM_CONCTL->CTRL0 |= CONCTL_CTRL0_ENET1_RXCLK_DLY_SEL_SET(tx_delay) | CONCTL_CTRL0_ENET1_RXCLK_DLY_SEL_SET(rx_delay);
+        HPM_CONCTL->CTRL0 |= CONCTL_CTRL0_ENET1_TXCLK_DLY_SEL_SET(tx_delay) | CONCTL_CTRL0_ENET1_RXCLK_DLY_SEL_SET(rx_delay);
     } else {
         return status_invalid_argument;
     }

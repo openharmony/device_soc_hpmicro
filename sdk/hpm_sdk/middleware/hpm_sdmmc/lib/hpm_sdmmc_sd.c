@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 HPMicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -69,7 +69,7 @@ static void sd_decode_status(sd_card_t *card, uint32_t *raw_status);
 
 static hpm_stat_t sd_set_bus_width(sd_card_t *card, sdmmc_buswidth_t buswidth);
 
-static hpm_stat_t sd_set_bus_timing(sd_card_t *card);
+static hpm_stat_t sd_set_bus_timing(sd_card_t *card, sdmmc_speed_mode_t timing_mode);
 
 static hpm_stat_t sd_check_card_parameters(sd_card_t *card);
 
@@ -78,6 +78,7 @@ static hpm_stat_t sd_app_cmd_set_write_block_erase_count(sd_card_t *card, uint32
 static hpm_stat_t sd_error_recovery(sd_card_t *card);
 
 static hpm_stat_t sd_send_cmd(sd_card_t *card, sdmmchost_cmd_t *cmd);
+
 static hpm_stat_t sd_transfer(sd_card_t *card, sdmmchost_xfer_t *content);
 
 static hpm_stat_t sd_send_cmd(sd_card_t *card, sdmmchost_cmd_t *cmd)
@@ -85,7 +86,7 @@ static hpm_stat_t sd_send_cmd(sd_card_t *card, sdmmchost_cmd_t *cmd)
     hpm_stat_t status = sdmmchost_send_command(card->host, cmd);
 
     if ((status >= status_sdxc_busy) && (status <= status_sdxc_tuning_failed)) {
-        hpm_stat_t  error_recovery_status = sd_error_recovery(card);
+        hpm_stat_t error_recovery_status = sd_error_recovery(card);
         if (error_recovery_status != status_success) {
             status = error_recovery_status;
         }
@@ -98,7 +99,7 @@ static hpm_stat_t sd_transfer(sd_card_t *card, sdmmchost_xfer_t *content)
     hpm_stat_t status = sdmmchost_transfer(card->host, content);
 
     if ((status >= status_sdxc_busy) && (status <= status_sdxc_tuning_failed)) {
-        hpm_stat_t  error_recovery_status = sd_error_recovery(card);
+        hpm_stat_t error_recovery_status = sd_error_recovery(card);
         if (error_recovery_status != status_success) {
             status = error_recovery_status;
         }
@@ -126,7 +127,7 @@ static hpm_stat_t sd_send_card_status(sd_card_t *card)
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     memset(cmd, 0, sizeof(*cmd));
     cmd->cmd_index = sdmmc_cmd_send_status;
-    cmd->resp_type = sdmmc_resp_r1;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
     cmd->cmd_argument = (uint32_t) card->relative_addr << 16;
     status = sd_send_cmd(card, cmd);
     if (status != status_success) {
@@ -145,10 +146,9 @@ static hpm_stat_t sd_switch_voltage(sd_card_t *card)
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     memset(cmd, 0, sizeof(*cmd));
     cmd->cmd_index = sd_voltage_switch;
-    cmd->resp_type = sdmmc_resp_r1;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
     cmd->cmd_argument = 0;
     status = sd_send_cmd(card, cmd);
-
 
     return status;
 }
@@ -160,7 +160,7 @@ static hpm_stat_t sd_send_if_cond(sd_card_t *card)
 
     cmd->cmd_index = sd_cmd_send_if_cond;
     cmd->cmd_argument = 0x1aa;
-    cmd->resp_type = sdmmc_resp_r7;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r7;
 
     hpm_stat_t status = sd_send_cmd(card, cmd);
     if (status != status_success) {
@@ -178,92 +178,89 @@ static void sd_decode_csd(sd_card_t *card, uint32_t *raw_csd)
 {
     sd_csd_t *csd = &card->csd;
 
-    csd->csd_structure = (uint8_t) ((raw_csd[3U] & 0xC0000000U) >> 30U);
-    csd->data_read_access_time1 = (uint8_t) ((raw_csd[3U] & 0xFF0000U) >> 16U);
-    csd->data_read_access_time2 = (uint8_t) ((raw_csd[3U] & 0xFF00U) >> 8U);
-    csd->transfer_speed = (uint8_t) (raw_csd[3U] & 0xFFU);
-    csd->card_command_class = (uint16_t) ((raw_csd[2U] & 0xFFF00000U) >> 20U);
-    csd->read_block_len = (uint8_t) ((raw_csd[2U] & 0xF0000U) >> 16U);
+    csd->csd_structure = (uint8_t) extract_csd_field(raw_csd, 127, 126);
+    csd->data_read_access_time1 = (uint8_t) extract_csd_field(raw_csd, 119, 112);
+    csd->data_read_access_time2 = (uint8_t) extract_csd_field(raw_csd, 111, 104);
+    csd->transfer_speed = (uint8_t) extract_csd_field(raw_csd, 103, 96);
+    csd->card_command_class = (uint16_t) extract_csd_field(raw_csd, 95, 84);
+    csd->read_block_len = (uint8_t) extract_csd_field(raw_csd, 83, 80);
 
-    if ((raw_csd[2U] & 0x8000U) != 0U) {
+    if (extract_csd_field(raw_csd, 79, 79) != 0U) {
         csd->support_read_block_partial = true;
     }
-    if ((raw_csd[2U] & 0x4000U) != 0U) {
+    if (extract_csd_field(raw_csd, 78, 78) != 0U) {
         csd->support_write_block_misalignment = true;
     }
-    if ((raw_csd[2U] & 0x2000U) != 0U) {
+    if (extract_csd_field(raw_csd, 77, 77) != 0U) {
         csd->support_read_block_misalignment = true;
     }
-    if ((raw_csd[2U] & 0x1000U) != 0U) {
+    if (extract_csd_field(raw_csd, 76, 76) != 0U) {
         csd->is_dsr_implemented = true;
     }
     if (csd->csd_structure == 0U) {
-        csd->device_size = (uint32_t) ((raw_csd[2U] & 0x3FFU) << 2U);
-        csd->device_size |= (uint32_t) ((raw_csd[1U] & 0xC0000000U) >> 30U);
-        csd->read_current_vdd_min = (uint8_t) ((raw_csd[1U] & 0x38000000U) >> 27U);
-        csd->read_current_vdd_max = (uint8_t) ((raw_csd[1U] & 0x7000000U) >> 24U);
-        csd->write_current_vdd_min = (uint8_t) ((raw_csd[1U] & 0xE00000U) >> 20U);
-        csd->write_current_vdd_max = (uint8_t) ((raw_csd[1U] & 0x1C0000U) >> 18U);
-        csd->device_size_multiplier = (uint8_t) ((raw_csd[1U] & 0x38000U) >> 15U);
+        csd->device_size = (uint32_t) extract_csd_field(raw_csd, 73, 62);
+        csd->read_current_vdd_min = (uint8_t) extract_csd_field(raw_csd, 61, 59);
+        csd->read_current_vdd_max = (uint8_t) extract_csd_field(raw_csd, 58, 56);
+        csd->write_current_vdd_min = (uint8_t) extract_csd_field(raw_csd, 55, 53);
+        csd->write_current_vdd_max = (uint8_t) extract_csd_field(raw_csd, 52, 50);
+        csd->device_size_multiplier = (uint8_t) extract_csd_field(raw_csd, 49, 47);
 
         /* Get card total block count and block size. */
-        card->block_count = ((csd->device_size + 1U) << (csd->device_size_multiplier + 2U));
+        uint32_t c_size_mult = 1UL << (csd->device_size_multiplier + 2);
+        card->block_count = (csd->device_size + 1U) * c_size_mult;
         card->block_size = (1UL << (csd->read_block_len));
         if (card->block_size != SDMMC_BLOCK_SIZE_DEFAULT) {
             card->block_count *= card->block_size;
             card->block_size = SDMMC_BLOCK_SIZE_DEFAULT;
             card->block_count /= card->block_size;
-
-            card->card_size_in_bytes = (csd->device_size + 1U) * (1UL << (csd->device_size_multiplier + 2U));
         }
+        card->card_size_in_bytes = (uint64_t) card->block_size * card->block_count;
     } else if (csd->csd_structure == 1U) {
         card->block_size = SDMMC_BLOCK_SIZE_DEFAULT;
 
-        csd->device_size = (uint32_t) ((raw_csd[2U] & 0x3FU) << 16U);
-        csd->device_size |= (uint32_t) ((raw_csd[1U] & 0xFFFF0000U) >> 16U);
+        csd->device_size = extract_csd_field(raw_csd, 69, 48);
         if (csd->device_size >= 0xFFFFU) {
             csd->support_sdxc = true;
         }
-
         card->block_count = ((csd->device_size + 1U) * 1024U);
         card->card_size_in_bytes = (uint64_t) (csd->device_size + 1U) * 512UL * 1024UL;
     } else {
         /* Unsupported csd version */
     }
 
-    if ((uint8_t) ((raw_csd[1U] & 0x4000U) >> 14U) != 0U) {
+    if (extract_csd_field(raw_csd, 46, 46) != 0U) {
         csd->is_erase_block_enabled = true;
     }
-    csd->erase_sector_size = (1UL + ((raw_csd[1U] & 0x3F80U) >> 7U)) * card->block_size;
-    csd->write_protect_group_size = (1UL + (raw_csd[1U] & 0x7FU)) * card->block_size;
-    if ((uint8_t) (raw_csd[0U] & 0x80000000U) != 0U) {
+    csd->erase_sector_size = (1UL + extract_csd_field(raw_csd, 45, 39)) * card->block_size;
+    csd->write_protect_group_size = (1UL + extract_csd_field(raw_csd, 38, 32)) * card->block_size;
+    if (extract_csd_field(raw_csd, 31, 31) != 0U) {
         csd->is_write_protection_group_enabled = true;
     }
-    csd->write_speed_factor = (uint8_t) ((raw_csd[0U] & 0x1C000000U) >> 26U);
-    csd->max_write_block_len = 1UL << ((raw_csd[0U] & 0x3C00000U) >> 22U);
-    if ((uint8_t) ((raw_csd[0U] & 0x200000U) >> 21U) != 0U) {
+    csd->write_speed_factor = (uint8_t) extract_csd_field(raw_csd, 28, 26);
+    csd->max_write_block_len = 1UL << extract_csd_field(raw_csd, 25, 22);
+    if (extract_csd_field(raw_csd, 21, 21) != 0U) {
         csd->support_write_block_partial = true;
     }
-    if ((uint8_t) ((raw_csd[0U] & 0x8000U) >> 15U) != 0U) {
+    if (extract_csd_field(raw_csd, 15, 15) != 0U) {
         csd->support_file_format_group = true;
     }
-    if ((uint8_t) ((raw_csd[0U] & 0x4000U) >> 14U) != 0U) {
+    if (extract_csd_field(raw_csd, 14, 14) != 0U) {
         csd->support_copy = true;
     }
-    if ((uint8_t) ((raw_csd[0U] & 0x2000U) >> 13U) != 0U) {
+    if (extract_csd_field(raw_csd, 13, 13) != 0U) {
         csd->support_permanent_write_protect = true;
     }
-    if ((uint8_t) ((raw_csd[0U] & 0x1000U) >> 12U) != 0U) {
+    if (extract_csd_field(raw_csd, 12, 12) != 0U) {
         csd->support_temporary_write_protect = true;
     }
-    csd->file_format = (uint8_t) ((raw_csd[0U] & 0xC00U) >> 10U);
+    csd->file_format = (uint8_t) extract_csd_field(raw_csd, 11, 10);
 
 
-    uint32_t tran_speed = raw_csd[3] & 0xFFU;
+    uint32_t tran_speed = extract_csd_field(raw_csd, 103, 96);
     uint32_t bitrate_unit = tran_speed & 0x7U;
     uint32_t time_value = (tran_speed >> 3) & 0xFU;
-    const uint32_t bitrate_unit_list[8] = {100UL * SPEED_1Kbps, SPEED_1Mbps, 10U * SPEED_1Mbps, 100U * SPEED_1Mbps,
-                                           0, 0, 0, 0};
+    const uint32_t bitrate_unit_list[8] = {100UL * SPEED_1Kbps, SPEED_1Mbps, 10U * SPEED_1Mbps, 100U * SPEED_1Mbps, 0,
+                                           0, 0, 0};
     const uint32_t time_value_list[16] = {0, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80};
     card->max_freq = bitrate_unit_list[bitrate_unit] / 10U * time_value_list[time_value];
 }
@@ -275,7 +272,7 @@ static hpm_stat_t sd_send_csd(sd_card_t *card)
 
     cmd->cmd_index = sd_cmd_send_csd;
     cmd->cmd_argument = (uint32_t) card->relative_addr << 16;
-    cmd->resp_type = sdmmc_resp_r2;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r2;
 
     hpm_stat_t status = sd_send_cmd(card, cmd);
     if (status != status_success) {
@@ -296,14 +293,16 @@ static hpm_stat_t sd_all_send_cid(sd_card_t *card)
     (void) memset(cmd, 0, sizeof(sdmmchost_cmd_t));
 
     cmd->cmd_index = sd_cmd_all_send_cid;
-    cmd->resp_type = sdmmc_resp_r2;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r2;
 
     hpm_stat_t status = sd_send_cmd(card, cmd);
     if (status != status_success) {
         return status;
     }
-    card->cid.cid_words[0] = cmd->response[0];
-    card->cid.cid_words[1] = cmd->response[1];
+
+    for (uint32_t i = 0; i < 4; i++) {
+        card->cid.cid_words[i] = cmd->response[i];
+    }
 
     return status;
 }
@@ -314,7 +313,7 @@ static hpm_stat_t sd_send_rca(sd_card_t *card)
     (void) memset(cmd, 0, sizeof(sdmmchost_cmd_t));
 
     cmd->cmd_index = sd_cmd_send_relative_addr;
-    cmd->resp_type = sdmmc_resp_r6;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r6;
 
     hpm_stat_t status = sd_send_cmd(card, cmd);
     if (status != status_success) {
@@ -328,9 +327,9 @@ static hpm_stat_t sd_send_rca(sd_card_t *card)
 static hpm_stat_t sd_error_recovery(sd_card_t *card)
 {
     sdmmchost_cmd_t *cmd = &card->host->cmd;
-    cmd->cmd_index = sdmmc_cmd_top_transmission;
+    cmd->cmd_index = sdmmc_cmd_stop_transmission;
     cmd->cmd_type = sdxc_cmd_type_abort_cmd;
-    cmd->resp_type = sdmmc_resp_r1b;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1b;
 
     return sdmmchost_error_recovery(card->host, cmd);
 }
@@ -344,7 +343,7 @@ static hpm_stat_t sd_app_cmd_send_cond_op(sd_card_t *card, sd_ocr_t ocr)
 
         cmd->cmd_index = sd_acmd_sd_send_op_cond;
         cmd->cmd_argument = ocr.ocr_word;
-        cmd->resp_type = sdmmc_resp_r3;
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r3;
         status = sd_send_cmd(card, cmd);
     }
     return status;
@@ -359,7 +358,7 @@ static hpm_stat_t sd_app_cmd_set_write_block_erase_count(sd_card_t *card, uint32
 
         cmd->cmd_index = sd_acmd_set_wr_blk_erase_count;
         cmd->cmd_argument = block_count;
-        cmd->resp_type = sdmmc_resp_r1;
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
         status = sd_send_cmd(card, cmd);
     }
 
@@ -371,12 +370,12 @@ static hpm_stat_t sd_probe_bus_voltage(sd_card_t *card)
     hpm_stat_t status = status_invalid_argument;
 
     do {
-        status = sdmmc_go_idle_state(card->host);
+        status = sdmmc_go_idle_state(card->host, 0);
         HPM_BREAK_IF(status != status_success);
 
         status = sd_send_if_cond(card);
         if (status == status_sdmmc_card_not_support) {
-            status = sdmmc_go_idle_state(card->host);
+            status = sdmmc_go_idle_state(card->host, 0);
             HPM_BREAK_IF(status != status_success);
         }
         sd_ocr_t ocr = {.ocr_word = 0};
@@ -389,21 +388,25 @@ static hpm_stat_t sd_probe_bus_voltage(sd_card_t *card)
         ocr.ocr_word = cmd->response[0];
         ocr.ocr_word &= sdxc_ocr.ocr_word;
         ocr.card_capacity_status = 1;
-        if (card->host->host_param.support_1v8) {
+        if (sdmmchost_is_voltage_switch_supported(card->host)) {
             ocr.switching_to_1v8_accepted = 1;
         }
 
         /* Switch Operation condition */
-        sd_ocr_t recv_ocr = {.ocr_word = 0 };
+        sd_ocr_t recv_ocr = {.ocr_word = 0};
         do {
             status = sd_app_cmd_send_cond_op(card, ocr);
             HPM_BREAK_IF(status != status_success);
             recv_ocr.ocr_word = cmd->response[0];
         } while (recv_ocr.card_power_up_status == 0);
 
+        if (recv_ocr.card_capacity_status == 0) {
+            card->sd_flags.is_byte_addressing_mode = 1;
+        }
+
         card->ocr.ocr_word = recv_ocr.ocr_word;
 
-        if (card->host->host_param.support_1v8 && (card->ocr.switching_to_1v8_accepted != 0U)) {
+        if (sdmmchost_is_voltage_switch_supported(card->host) && (card->ocr.switching_to_1v8_accepted != 0U)) {
             status = sd_switch_voltage(card);
             HPM_BREAK_IF(status != status_success);
 
@@ -411,7 +414,7 @@ static hpm_stat_t sd_probe_bus_voltage(sd_card_t *card)
             HPM_BREAK_IF(status != status_success);
 
             card->operation_voltage = sdmmc_operation_voltage_1v8;
-        }  else {
+        } else {
             card->operation_voltage = sdmmc_operation_voltage_3v3;
         }
 
@@ -447,7 +450,7 @@ static hpm_stat_t sd_send_scr(sd_card_t *card)
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     (void) memset(cmd, 0, sizeof(*cmd));
     cmd->cmd_index = sd_acmd_send_scr;
-    cmd->resp_type = sdmmc_resp_r1;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
     sdmmchost_data_t *data = &card->host->data;
     memset(data, 0, sizeof(*data));
     data->block_size = 8;
@@ -495,9 +498,10 @@ static hpm_stat_t sd_check_card_parameters(sd_card_t *card)
     hpm_stat_t status;
     if ((card == NULL) || (card->host == NULL) || (card->host->host_param.base == NULL)) {
         status = status_invalid_argument;
-    } else if (!card->host->card_inserted) {
+    } else if (!sdmmchost_is_card_detected(card->host)) {
         status = status_sdmmc_device_init_required;
     } else {
+        card->host->card_inserted = true;
         status = status_success;
     }
     return status;
@@ -514,7 +518,7 @@ static hpm_stat_t sd_set_bus_width(sd_card_t *card, sdmmc_buswidth_t buswidth)
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     memset(cmd, 0, sizeof(*cmd));
     cmd->cmd_index = sd_acmd_set_bus_width;
-    cmd->resp_type = sdmmc_resp_r1;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
 
     if (buswidth == sdmmc_bus_width_1bit) {
         cmd->cmd_argument = 0;
@@ -528,43 +532,52 @@ static hpm_stat_t sd_set_bus_width(sd_card_t *card, sdmmc_buswidth_t buswidth)
     return status;
 }
 
-static hpm_stat_t sd_set_bus_timing(sd_card_t *card)
+static hpm_stat_t sd_set_bus_timing(sd_card_t *card, sdmmc_speed_mode_t timing_mode)
 {
     hpm_stat_t status;
     uint32_t timing_mode_option = (uint32_t) sd_timing_sdr25_highspeed;
     uint32_t clock_option = SD_CLOCK_50MHZ;
-    card->current_timing = sd_timing_sdr25_highspeed;
-    if (card->operation_voltage == sdmmc_operation_voltage_1v8) {
-        timing_mode_option = sd_timing_sdr104;
+    bool need_reverse = true;
+    sdmmc_speed_mode_t speed;
+    switch (timing_mode) {
+    default:
+        clock_option = SD_CLOCK_25MHZ;
+        speed = sdmmc_sd_speed_sdr12;
+        timing_mode_option = sd_timing_sdr12_default;
+        break;
+    case sd_timing_sdr25_highspeed:
+        clock_option = SD_CLOCK_50MHZ;
+        speed = sdmmc_sd_speed_sdr25;
+        timing_mode_option = sd_timing_sdr25_highspeed;
+        break;
+    case sd_timing_sdr50:
+        clock_option = SD_CLOCK_100MHZ;
+        speed = sdmmc_sd_speed_sdr50;
+        timing_mode_option = sd_timing_sdr50;
+        break;
+    case sd_timing_ddr50:
+        need_reverse = false;
+        clock_option = SD_CLOCK_50MHZ;
+        speed = sdmmc_sd_speed_ddr50;
+        timing_mode_option = sd_timing_ddr50;
+        break;
+    case sd_timing_sdr104:
         clock_option = SD_CLOCK_208MHZ;
-        card->current_timing = sd_timing_sdr104;
+        speed = sdmmc_sd_speed_sdr104;
+        timing_mode_option = sd_timing_sdr104;
+        break;
     }
+
+    card->current_timing = speed;
+
     status = sd_switch_function(card, (uint32_t) sd_switch_function_mode_set,
-                                           (uint32_t) sd_switch_function_group_access_mode,
-                                           timing_mode_option);
+                                (uint32_t) sd_switch_function_group_access_mode, timing_mode_option);
     if (status != status_success) {
         return status;
     }
 
-    switch (card->current_timing) {
-    case sd_timing_sdr12_default:
-        sdmmchost_set_speed_mode(card->host, sdmmc_sd_speed_sdr12);
-        break;
-    case sd_timing_sdr25_highspeed:
-        sdmmchost_set_speed_mode(card->host, sdmmc_sd_speed_sdr25);
-        break;
-    case sd_timing_sdr50:
-        sdmmchost_set_speed_mode(card->host, sdmmc_sd_speed_sdr50);
-        break;
-    case sd_timing_ddr50:
-        sdmmchost_set_speed_mode(card->host, sdmmc_sd_speed_ddr50);
-        break;
-    case sd_timing_sdr104:
-        sdmmchost_set_speed_mode(card->host, sdmmc_sd_speed_sdr104);
-        break;
-    }
-
-    sdmmchost_set_card_clock(card->host, clock_option);
+    sdmmchost_set_speed_mode(card->host, speed);
+    card->host->clock_freq = sdmmchost_set_card_clock(card->host, clock_option, need_reverse);
     return status;
 }
 
@@ -625,77 +638,57 @@ static void sd_decode_status(sd_card_t *card, uint32_t *raw_status)
     card->status.uhs_speed_grade = sd_raw_status->uhs_speed_grade;
 }
 
-void sd_card_deinit(sd_card_t *card);
+void sd_card_deinit(sd_card_t *card)
+{
+    (void) card;
+}
 
 hpm_stat_t sd_host_init(sd_card_t *card)
 {
     hpm_stat_t status = status_success;
     assert(card != NULL);
 
-    if (!card->is_host_ready) {
-        card->host = sdmmchost_get_host();
-        if (card->host == NULL) {
-            return status_invalid_argument;
-        }
-        status = sdmmchost_init(card->host);
-        if (status == status_success) {
-            card->is_host_ready = true;
-            card->operation_voltage = sdmmc_operation_voltage_3v3;
-        }
-    } else {
-        status = sdmmchost_init(card->host);
-        if (status == status_success) {
-            card->operation_voltage = sdmmc_operation_voltage_3v3;
-        }
+    status = sdmmchost_init(card->host);
+    if (status == status_success) {
+        card->is_host_ready = true;
+        card->operation_voltage = sdmmc_operation_voltage_3v3;
     }
 
     return status_success;
 }
+
 
 hpm_stat_t sd_init(sd_card_t *card)
 {
     hpm_stat_t status = status_invalid_argument;
     do {
         HPM_BREAK_IF(card == NULL);
-        if ((card->host == NULL) || (!card->host->card_init_done)) {
-            status = sd_host_init(card);
-            HPM_BREAK_IF(status != status_success);
-            sdmmchost_reset(card->host);
 
-            card->relative_addr = 0;
-            card->current_timing = sd_timing_sdr12_default;
+        status = sd_host_init(card);
+        HPM_BREAK_IF(status != status_success);
 
-            /* Set up Card detection environment */
-            if (!card->host->host_param.use_polling_mode) {
-                sdmmchost_setup_card_detection(card->host);
-            }
-            /* Check whether card is present */
-            if (card->host->host_param.card_detection_mode != sdmmc_host_card_detection_none) {
-                int32_t delay_cnt = 10;
-                while (!sd_is_card_present(card)) {
-                    card->host->host_param.delay_ms(100);
-                    delay_cnt--;
-                    if (delay_cnt < 0) {
-                        break;
-                    }
-                }
-                if (!sd_is_card_present(card)) {
-                    status = status_sdmmc_wait_card_insert_timeout;
-                    break;
-                }
-                card->host->card_inserted = true;
-                card->host->host_param.delay_ms(100); /* Wait a while in case the card connection is still not stable */
-            } else {
-                card->host->card_inserted = true;
-            }
-            status = sd_card_init(card);
+        card->host->card_init_done = false;
+        card->relative_addr = 0;
+        card->current_timing = sdmmc_sd_speed_normal;
 
-            if (status == status_success) {
-                card->host->card_init_done = true;
+        /* Check whether card is present */
+        int32_t delay_cnt = 10;
+        while (!sd_is_card_present(card)) {
+            card->host->host_param.delay_ms(100);
+            delay_cnt--;
+            if (delay_cnt < 0) {
+                break;
             }
-        } else {
-            status = status_success;
         }
+        if (!sd_is_card_present(card)) {
+            status = status_sdmmc_wait_card_insert_timeout;
+            break;
+        }
+        card->host->card_inserted = true;
+        sdmmchost_delay_ms(card->host, 100); /* Wait a while in case the card connection is still not stable */
+
+        status = sd_card_init(card);
+
     } while (false);
 
     return status;
@@ -703,7 +696,7 @@ hpm_stat_t sd_init(sd_card_t *card)
 
 void sd_deinit(sd_card_t *card)
 {
-
+    (void) card;
 }
 
 
@@ -713,12 +706,15 @@ hpm_stat_t sd_card_init(sd_card_t *card)
     do {
         HPM_BREAK_IF(status != status_success);
 
-        sdmmchost_set_card_bus_width(card->host, sdxc_bus_width_1bit);
-        sdmmchost_set_card_clock(card->host, SDMMC_CLOCK_400KHZ);
+        sdmmchost_set_card_bus_width(card->host, sdmmc_bus_width_1bit);
+        sdmmchost_set_card_clock(card->host, SDMMC_CLOCK_400KHZ, true);
         status = sd_probe_bus_voltage(card);
+        card->host->operation_mode = hpm_sdmmc_operation_mode_identification;
+        sdmmchost_init_io(card->host, card->host->operation_mode);
+
         HPM_BREAK_IF(status != status_success);
 
-        sdmmchost_set_card_clock(card->host, SD_CLOCK_25MHZ);
+        card->host->dev_type = sdmmc_dev_type_sd;
 
         /* Send CMD2 */
         status = sd_all_send_cid(card);
@@ -733,6 +729,10 @@ hpm_stat_t sd_card_init(sd_card_t *card)
         status = sd_select_card(card, true);
         HPM_BREAK_IF(status != status_success);
 
+        sdmmchost_set_card_clock(card->host, SD_CLOCK_25MHZ, true);
+        card->host->operation_mode = hpm_sdmmc_operation_mode_transfer;
+        sdmmchost_init_io(card->host, card->host->operation_mode);
+
         /* Send ACMD13 */
         status = sd_read_status(card);
         HPM_BREAK_IF(status != status_success);
@@ -744,32 +744,74 @@ hpm_stat_t sd_card_init(sd_card_t *card)
         /* TODO: Add CMD42 handling if the CARD in under locked state */
 
         /*  Send ACMD6 */
-        if (card->sd_flags.support_4bit_width != 0) {
+        bool support_4bit = IS_HPM_BITMASK_SET(card->host->host_param.host_flags, HPM_SDMMC_HOST_SUPPORT_4BIT);
+        if (support_4bit && (card->sd_flags.support_4bit_width != 0)) {
             status = sd_set_bus_width(card, sdmmc_bus_width_4bit);
             if (status != status_success) {
                 return status;
             }
             sdmmchost_set_card_bus_width(card->host, sdmmc_bus_width_4bit);
         }
-
         /* Send CMD16: Set block size */
         status = sdmmc_set_block_size(card->host, SDMMC_BLOCK_SIZE_DEFAULT);
         if (status != status_success) {
             return status;
         }
 
+        /***************************************************************************************************************
+         *
+         *      Switch to specified highest frequency
+         *
+         *      Steps:
+         *
+         *      1. Find the allowed maximum speed mode
+         *      2. Switch to the maximum speed mode following the eMMC specification
+         *
+         **************************************************************************************************************/
+
+        sdmmc_speed_mode_t speed_mode = sdmmc_sd_speed_normal;
+        bool support_1v8 = IS_HPM_BITMASK_SET(card->host->host_param.host_flags, HPM_SDMMC_HOST_SUPPORT_1V8);
+        bool support_ddr = IS_HPM_BITMASK_SET(card->host->host_param.host_flags, HPM_SDMMC_HOST_SUPPORT_DDR);
+        bool support_sdr104 = IS_HPM_BITMASK_SET(card->host->host_param.host_flags, HPM_SDMMC_HOST_SUPPORT_SDR104);
+        bool support_sdr50 = IS_HPM_BITMASK_SET(card->host->host_param.host_flags, HPM_SDMMC_HOST_SUPPORT_SDR50);
+
+        bool need_manual_set_cardclk_delay_chain = false;
+        if (card->operation_voltage == sdmmc_operation_voltage_1v8) {
+            if (support_sdr104 && support_1v8 && support_4bit) {
+                speed_mode = sdmmc_sd_speed_sdr104;
+            } else if (support_sdr50 && support_1v8 && support_4bit) {
+                speed_mode = sdmmc_sd_speed_sdr50;
+            } else if (support_ddr && support_1v8 && support_4bit) {
+                speed_mode = sdmmc_sd_speed_ddr50;
+                need_manual_set_cardclk_delay_chain = true;
+            } else {
+                speed_mode = sdmmc_sd_speed_high;
+            }
+        } else {
+            speed_mode = sdmmc_sd_speed_high;
+        }
+
         /* Send CMD6: Set bus timing  */
-        status = sd_set_bus_timing(card);
+        status = sd_set_bus_timing(card, speed_mode);
         HPM_BREAK_IF(status != status_success);
+
+        /* Perform Tuning process if necessary */
+        if ((card->current_timing == sdmmc_sd_speed_sdr50) || (card->current_timing == sdmmc_sd_speed_sdr104)) {
+            status = sdmmc_enable_auto_tuning(card->host);
+            HPM_BREAK_IF(status != status_success);
+        }
 
         /** Send CMD: Set power limit */
         status = sd_set_max_current(card, sd_current_limit_600ma);
         HPM_BREAK_IF(status != status_success);
 
-        /* Perform Tuning process if necessary */
-        if (card->current_timing >= sd_timing_sdr50) {
-            status = sdmmc_enable_auto_tuning(card->host);
-            HPM_BREAK_IF(status != status_success);
+        /* Switch to 1.8V signaling, mandatory for DDR50 mode */
+        if (speed_mode == sdmmc_sd_speed_ddr50) {
+            sdmmchost_select_voltage(card->host, hpm_sdmmc_io_voltage_1v8);
+        }
+
+        if (need_manual_set_cardclk_delay_chain) {
+            (void) sdmmchost_set_cardclk_delay_chain(card->host);
         }
 
         /* Try to get new CSD and look up the TRAN_SPEED */
@@ -782,6 +824,10 @@ hpm_stat_t sd_card_init(sd_card_t *card)
         HPM_BREAK_IF(status != status_success);
 
     } while (false);
+
+        if (status == status_success) {
+        card->host->card_init_done = true;
+    }
 
     return status;
 }
@@ -809,7 +855,7 @@ hpm_stat_t sd_read_status(sd_card_t *card)
     sdmmchost_data_t *data = &card->host->data;
     sdmmchost_xfer_t *content = &card->host->xfer;
     cmd->cmd_index = sd_acmd_sd_status;
-    cmd->resp_type = sdmmc_resp_r1;
+    cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
     data->block_size = 64;
     data->block_cnt = 1;
     data->rx_data = card->host->buffer;
@@ -858,8 +904,13 @@ hpm_stat_t sd_read_blocks(sd_card_t *card, uint8_t *buffer, uint32_t start_block
             } else {
                 cmd->cmd_index = sdmmc_cmd_read_single_block;
             }
-            cmd->resp_type = sdmmc_resp_r1;
-            cmd->cmd_argument = start_block;
+
+            uint32_t start_addr = start_block;
+            if (card->sd_flags.is_byte_addressing_mode == 1U) {
+                start_addr *= card->block_size;
+            }
+            cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
+            cmd->cmd_argument = start_addr;
             data->block_size = SDMMC_BLOCK_SIZE_DEFAULT;
             data->block_cnt = read_block_count;
             data->rx_data = (uint32_t *) sdmmc_get_sys_addr(card->host, (uint32_t) buffer);
@@ -923,16 +974,20 @@ hpm_stat_t sd_write_blocks(sd_card_t *card, const uint8_t *buffer, uint32_t star
                 cmd->cmd_index = sdmmc_cmd_write_single_block;
                 data->enable_auto_cmd12 = false;
             }
-            cmd->resp_type = sdmmc_resp_r1;
-            cmd->cmd_argument = start_block;
+            uint32_t start_addr = start_block;
+            if (card->sd_flags.is_byte_addressing_mode == 1U) {
+                start_addr *= card->block_size;
+            }
+            cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
+            cmd->cmd_argument = start_addr;
             data->block_size = SDMMC_BLOCK_SIZE_DEFAULT;
             data->block_cnt = write_block_count;
             data->tx_data = (const uint32_t *) sdmmc_get_sys_addr(card->host, (uint32_t) buffer);
             content->data = data;
             content->command = cmd;
             uint32_t aligned_start = HPM_L1C_CACHELINE_ALIGN_DOWN((uint32_t) data->tx_data);
-            uint32_t aligned_end =
-                HPM_L1C_CACHELINE_ALIGN_UP((uint32_t) data->tx_data + card->block_size * write_block_count);
+            uint32_t aligned_end = HPM_L1C_CACHELINE_ALIGN_UP(
+                    (uint32_t) data->tx_data + card->block_size * write_block_count);
             uint32_t aligned_size = aligned_end - aligned_start;
             l1c_dc_flush(aligned_start, aligned_size);
             status = sd_transfer(card, content);
@@ -973,7 +1028,7 @@ static uint32_t sd_calculate_erase_timeout(sd_card_t *card, uint32_t start_block
 
         /* Erase timeout =  Terase/Nerase * AU_COUNT + ERASE_OFFSET */
         erase_timeout = 1000U * card->status.erase_timeout / card->status.erase_size * full_erase_au_count +
-            card->status.erase_offset * 1000;
+                        card->status.erase_offset * 1000;
         if (erase_timeout < 1000) {
             erase_timeout = 1000;
         }
@@ -995,23 +1050,29 @@ hpm_stat_t sd_erase_blocks(sd_card_t *card, uint32_t start_block, uint32_t block
 
         sdmmchost_cmd_t *cmd = &card->host->cmd;
         memset(cmd, 0, sizeof(*cmd));
+        uint32_t erase_start_addr = start_block;
+        uint32_t erase_end_addr = start_block + block_count - 1U;
+        if (card->sd_flags.is_byte_addressing_mode == 1U) {
+            erase_start_addr *= card->block_size;
+            erase_end_addr *= card->block_size;
+        }
         uint32_t erase_timeout = sd_calculate_erase_timeout(card, start_block, block_count);
         /* Send erase start */
         cmd->cmd_index = sd_cmd_erase_start;
-        cmd->cmd_argument = start_block;
-        cmd->resp_type = sdmmc_resp_r1;
+        cmd->cmd_argument = erase_start_addr;
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
         status = sd_send_cmd(card, cmd);
         HPM_BREAK_IF(status != status_success);
         /* Send Erase end */
         cmd->cmd_index = sd_cmd_erase_end;
-        cmd->cmd_argument = start_block + block_count - 1U;
+        cmd->cmd_argument = erase_end_addr;
         status = sd_send_cmd(card, cmd);
         HPM_BREAK_IF(status != status_success);
 
         /* Send erase command */
         cmd->cmd_index = sdmmc_cmd_erase;
         cmd->cmd_argument = 0xFF;
-        cmd->resp_type = sdmmc_resp_r1b;
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1b;
         cmd->cmd_timeout_ms = erase_timeout;
         status = sd_send_cmd(card, cmd);
         HPM_BREAK_IF(status != status_success);
@@ -1079,9 +1140,9 @@ hpm_stat_t sd_switch_function(sd_card_t *card, uint32_t mode, uint32_t group, ui
         memset(content, 0, sizeof(*content));
 
         cmd->cmd_index = sd_cmd_switch;
-        cmd->resp_type = sdmmc_resp_r1;
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
         cmd->cmd_argument =
-            (mode << 31) | (0x00FFFFFFUL & (~(0xFUL << ((group - 1U) * 4)))) | (number << ((group - 1U) * 4));
+                (mode << 31) | (0x00FFFFFFUL & (~(0xFUL << ((group - 1U) * 4)))) | (number << ((group - 1U) * 4));
         data->block_size = sizeof(switch_function_status_t);
         data->block_cnt = 1;
         data->rx_data = (uint32_t *) sdmmc_get_sys_addr(card->host, (uint32_t) &card->host->buffer);

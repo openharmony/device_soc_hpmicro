@@ -32,7 +32,7 @@ static inline hpm_stat_t enet_enable_lpi_interrupt(ENET_Type *ptr)
     hpm_stat_t stat = status_success;
 
     if (ptr == HPM_ENET0) {
-        ptr->CTRL2 |= ENET_CTRL2_ENET0_LPI_INTR_EN_MASK;
+        ptr->CTRL2 |= ENET_CTRL2_ENET0_LPI_IRQ_EN_MASK;
     } else {
         return status_invalid_argument;
     }
@@ -45,7 +45,7 @@ static inline hpm_stat_t enet_disable_lpi_interrupt(ENET_Type *ptr)
     hpm_stat_t stat = status_success;
 
     if (ptr == HPM_ENET0) {
-        ptr->CTRL2 &= ~ENET_CTRL2_ENET0_LPI_INTR_EN_MASK;
+        ptr->CTRL2 &= ~ENET_CTRL2_ENET0_LPI_IRQ_EN_MASK;
     } else {
         return status_invalid_argument;
     }
@@ -55,6 +55,9 @@ static inline hpm_stat_t enet_disable_lpi_interrupt(ENET_Type *ptr)
 
 static inline hpm_stat_t enet_rgmii_set_clock_delay(ENET_Type *ptr, uint8_t tx_delay, uint8_t rx_delay)
 {
+    (void) ptr;
+    (void) tx_delay;
+    (void) rx_delay;
     hpm_stat_t stat = status_fail;
 
     return stat;

@@ -350,6 +350,8 @@ bool usb_host_init(usb_host_handle_t *handle, uint32_t int_mask, uint16_t framel
     usb_host_init_async_list(handle);
     usb_host_init_periodic_list(handle);
     usb_host_vbus_ctrl(handle);
+    usb_hcd_run(handle->regs);
+    usb_hcd_enable_port_power(handle->regs);
     return true;
 }
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
-#include "string.h"
+#include <string.h>
 #include "hpm_wav_codec.h"
 
 hpm_stat_t hpm_wav_decode_init(char *fname, hpm_wav_ctrl *wav_ctrl, uint8_t (*pbuf)[512])
@@ -61,7 +61,7 @@ uint32_t hpm_wav_decode(hpm_wav_ctrl *wav_ctrl, uint8_t *buf, uint32_t size)
     uint32_t *pbuf;
     uint8_t *p8;
     uint32_t word_size;
-    uint32_t buf_len;
+    uint32_t buf_len = 0;
 
     pbuf = (uint32_t *)buf;
     if (wav_ctrl->wav_head.fmt_chunk.bitspersample == 32) {

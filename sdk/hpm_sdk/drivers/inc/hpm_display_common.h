@@ -50,6 +50,8 @@ typedef enum display_pixel_format {
     display_pixel_format_gbr422,
     display_pixel_format_yuv422,
     display_pixel_format_ycbcr422,
+    display_pixel_format_y8,
+    display_pixel_format_raw8,
 } display_pixel_format_t;
 
 /**
@@ -169,6 +171,10 @@ static inline
         return 16;
     case display_pixel_format_ycbcr422:
         return 16;
+    case display_pixel_format_y8:
+        return 8;
+    case display_pixel_format_raw8:
+        return 8;
     default:
         return 0;
     }

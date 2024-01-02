@@ -38,15 +38,6 @@ typedef enum {
 } spi_interrupt_t;
 
 /**
- * @brief spi data length in bit
- */
-typedef enum {
-    spi_data_length_8_bits = 7,
-    spi_data_length_16_bits = 15,
-    spi_data_length_31_bits = 30
-} spi_data_length_in_bits_t;
-
-/**
  * @brief spi mode selection
  */
 typedef enum {
@@ -225,7 +216,10 @@ typedef struct {
     uint8_t trans_mode;
     uint8_t data_phase_fmt;
     uint8_t dummy_cnt;
-} spi_common_control_config_t;
+#if defined(SPI_SOC_HAS_CS_SELECT) && (SPI_SOC_HAS_CS_SELECT == 1)
+    uint8_t cs_index;
+#endif
+} spi_common_control_config_t; /*!< value in spi_cs_index_t */
 
 /**
  * @brief spi control config structure
@@ -235,6 +229,33 @@ typedef struct {
     spi_slave_control_config_t  slave_config;
     spi_common_control_config_t common_config;
 } spi_control_config_t;
+
+#if defined(SPI_SOC_HAS_CS_SELECT) && (SPI_SOC_HAS_CS_SELECT == 1)
+typedef enum {
+    spi_cs_0 = 1,
+    spi_cs_1 = 2,
+    spi_cs_2 = 4,
+    spi_cs_3 = 8,
+} spi_cs_index_t;
+#endif
+
+typedef enum {
+    addrlen_8bit = 0,
+    addrlen_16bit,
+    addrlen_24bit,
+    addrlen_32bit
+} spi_address_len_t;
+
+#if defined(SPI_SOC_SUPPORT_DIRECTIO) && (SPI_SOC_SUPPORT_DIRECTIO == 1)
+typedef enum {
+    hold_pin = 0,
+    wp_pin,
+    miso_pin,
+    mosi_pin,
+    sclk_pin,
+    cs_pin
+} spi_directio_pin_t;
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -297,11 +318,11 @@ void spi_format_init(SPI_Type *ptr, spi_format_config_t *config);
  *
  * @param [in] ptr SPI base address
  * @param [in] config spi_control_config_t
- * @param [in] cmd spi transfer mode
+ * @param [in,out] cmd spi transfer command address
  * @param [in] addr spi transfer target address
  * @param [in] wbuff spi sent data buff address
  * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
- * @param [in] rbuff spi receive data buff address
+ * @param [out] rbuff spi receive data buff address
  * @param [in] rcount spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @retval hpm_stat_t status_success if spi transfer without any error
  */
@@ -315,7 +336,7 @@ hpm_stat_t spi_transfer(SPI_Type *ptr,
  *
  * @param [in] ptr SPI base address
  * @param [in] config spi_control_config_t
- * @param [in] cmd spi transfer mode
+ * @param [in] cmd spi transfer command address
  * @param [in] addr spi transfer target address
  * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @param [in] rcount spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
@@ -329,6 +350,8 @@ hpm_stat_t spi_setup_dma_transfer(SPI_Type *ptr,
 /**
  * @brief spi wait for idle status
  *
+ * @note on slave mode, if CS signal is asserted, take it as busy; if SPI CS signal is de-asserted, take it as idle.
+ *
  * @param [in] ptr SPI base address
  * @retval hpm_stat_t status_success if spi in idle status
  */
@@ -337,17 +360,45 @@ hpm_stat_t spi_wait_for_idle_status(SPI_Type *ptr);
 /**
  * @brief spi wait for busy status
  *
+ * @note on slave mode, if CS signal is asserted, take it as busy; if SPI CS signal is de-asserted, take it as idle.
+ *
  * @param [in] ptr SPI base address
  * @retval hpm_stat_t status_success if spi in busy status
  */
 hpm_stat_t spi_wait_for_busy_status(SPI_Type *ptr);
 
 /**
+ * @brief SPI set TX FIFO threshold
+ *
+ * This function configures SPI TX FIFO threshold.
+ *
+ * @param ptr SPI base address.
+ * @param threshold The FIFO threshold value, the value should not greater than FIFO size.
+ */
+static inline void spi_set_tx_fifo_threshold(SPI_Type *ptr, uint32_t threshold)
+{
+    ptr->CTRL = (ptr->CTRL & ~SPI_CTRL_TXTHRES_MASK) | SPI_CTRL_TXTHRES_SET(threshold);
+}
+
+/**
+ * @brief SPI set RX FIFO threshold
+ *
+ * This function configures SPI RX FIFO threshold.
+ *
+ * @param ptr SPI base address.
+ * @param threshold The FIFO threshold value, the value should not greater than FIFO size.
+ */
+static inline void spi_set_rx_fifo_threshold(SPI_Type *ptr, uint32_t threshold)
+{
+    ptr->CTRL = (ptr->CTRL & ~SPI_CTRL_RXTHRES_MASK) | SPI_CTRL_RXTHRES_SET(threshold);
+}
+
+/**
  * @brief Enables the SPI DMA request.
  *
  * This function configures the Rx and Tx DMA mask of the SPI. The parameters are base and a DMA mask.
  *
- * @param base SPI base address.
+ * @param ptr SPI base address.
  * @param mask The dma enable mask; Use the spi_dma_enable_t.
  */
 static inline void spi_enable_dma(SPI_Type *ptr, uint32_t mask)
@@ -360,7 +411,7 @@ static inline void spi_enable_dma(SPI_Type *ptr, uint32_t mask)
  *
  * This function configures the Rx and Tx DMA mask of the SPI.  The parameters are base and a DMA mask.
  *
- * @param base SPI base address.
+ * @param ptr SPI base address.
  * @param mask The dma enable mask; Use the spi_dma_enable_t.
  */
 static inline void spi_disable_dma(SPI_Type *ptr, uint32_t mask)
@@ -373,7 +424,7 @@ static inline void spi_disable_dma(SPI_Type *ptr, uint32_t mask)
  *
  * This function gets interrupt status of the SPI.
  *
- * @param base SPI base address.
+ * @param ptr SPI base address.
  * @retval SPI interrupt status register value
  */
 static inline uint32_t spi_get_interrupt_status(SPI_Type *ptr)
@@ -386,14 +437,14 @@ static inline uint32_t spi_get_interrupt_status(SPI_Type *ptr)
  *
  * This function clears interrupt status of the SPI.
  *
- * @param base SPI base address.
+ * @param ptr SPI base address.
  * @param mask The interrupt mask; Use the spi_interrupt_t.
  *
  */
 static inline void spi_clear_interrupt_status(SPI_Type *ptr, uint32_t mask)
 {
     /* write 1 to clear */
-    ptr->INTRST |= mask;
+    ptr->INTRST = mask;
 }
 
 /**
@@ -401,7 +452,7 @@ static inline void spi_clear_interrupt_status(SPI_Type *ptr, uint32_t mask)
  *
  * This function configures interrupt of the SPI. The parameters are base and a interrupt mask.
  *
- * @param base SPI base address.
+ * @param ptr SPI base address.
  * @param mask The interrupt mask; Use the spi_interrupt_t.
  */
 static inline void spi_enable_interrupt(SPI_Type *ptr, uint32_t mask)
@@ -414,7 +465,7 @@ static inline void spi_enable_interrupt(SPI_Type *ptr, uint32_t mask)
  *
  * This function configures interrupt of the SPI. The parameters are base and a interrupt mask.
  *
- * @param base SPI base address.
+ * @param ptr SPI base address.
  * @param mask The interrupt mask; Use the spi_interrupt_t.
  */
 static inline void spi_disable_interrupt(SPI_Type *ptr, uint32_t mask)
@@ -429,14 +480,14 @@ static inline void spi_disable_interrupt(SPI_Type *ptr, uint32_t mask)
  * The order of reading and writing is controlled by spi_control_init.
  *
  * @param [in] ptr SPI base address
- * @param [in] datalen data length in bit, use the spi_data_length_in_bits_t
+ * @param [in] data_len_in_bytes data length in bytes
  * @param [in] wbuff spi sent data buff address
  * @param [in] wcount spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
- * @param [in] rbuff spi receive data buff address
+ * @param [out] rbuff spi receive data buff address
  * @param [in] rcount spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @retval hpm_stat_t status_success if spi transfer without any error
  */
-hpm_stat_t spi_write_read_data(SPI_Type *ptr, uint8_t datalen, uint8_t *wbuff, uint32_t wcount, uint8_t *rbuff, uint32_t rcount);
+hpm_stat_t spi_write_read_data(SPI_Type *ptr, uint8_t data_len_in_bytes, uint8_t *wbuff, uint32_t wcount, uint8_t *rbuff, uint32_t rcount);
 
 /**
  * @brief spi read data
@@ -444,12 +495,12 @@ hpm_stat_t spi_write_read_data(SPI_Type *ptr, uint8_t datalen, uint8_t *wbuff, u
  * @note Call this function after SPI CONTROL is configured by spi_control_init.
  *
  * @param [in] ptr SPI base address
- * @param [in] datalen data length in bit, use the spi_data_length_in_bits_t
- * @param [in] buff spi receive data buff address
+ * @param [in] data_len_in_bytes data length in bytes
+ * @param [out] buff spi receive data buff address
  * @param [in] count spi receive data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @retval hpm_stat_t status_success if spi transfer without any error
  */
-hpm_stat_t spi_read_data(SPI_Type *ptr, uint8_t datalen, uint8_t *buff, uint32_t count);
+hpm_stat_t spi_read_data(SPI_Type *ptr, uint8_t data_len_in_bytes, uint8_t *buff, uint32_t count);
 
 /**
  * @brief spi write data
@@ -457,17 +508,17 @@ hpm_stat_t spi_read_data(SPI_Type *ptr, uint8_t datalen, uint8_t *buff, uint32_t
  * @note Call this function after SPI CONTROL is configured by spi_control_init.
  *
  * @param [in] ptr SPI base address
- * @param [in] datalen data length in bit, use the spi_data_length_in_bits_t
+ * @param [in] data_len_in_bytes data length in bytes
  * @param [in] buff spi sent data buff address
  * @param [in] count spi sent data count, not greater than SPI_SOC_TRANSFER_COUNT_MAX
  * @retval hpm_stat_t status_success if spi transfer without any error
  */
-hpm_stat_t spi_write_data(SPI_Type *ptr, uint8_t datalen, uint8_t *buff, uint32_t count);
+hpm_stat_t spi_write_data(SPI_Type *ptr, uint8_t data_len_in_bytes, uint8_t *buff, uint32_t count);
 
 /**
  * @brief spi write command
  *
- * @note Call this function after SPI CONTROL is configured by spi_control_init.
+ * Writing operations on this register will trigger SPI transfers, call this function on master mode.
  *
  * @param [in] ptr SPI base address
  * @param [in] mode spi mode, use the spi_mode_selection_t
@@ -476,6 +527,32 @@ hpm_stat_t spi_write_data(SPI_Type *ptr, uint8_t datalen, uint8_t *buff, uint32_
  * @retval hpm_stat_t status_success if spi transfer without any error
  */
 hpm_stat_t spi_write_command(SPI_Type *ptr, spi_mode_selection_t mode, spi_control_config_t *config, uint8_t *cmd);
+
+/**
+ * @brief spi read command
+ *
+ * On slave mode, the command field of the last received SPI transaction is stored in this SPI Command Register
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] mode spi mode, use the spi_mode_selection_t
+ * @param [in] config point to spi_control_config_t
+ * @param [out] cmd command data address
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_read_command(SPI_Type *ptr, spi_mode_selection_t mode, spi_control_config_t *config, uint8_t *cmd);
+
+/**
+ * @brief spi write address
+ *
+ * @note Call this function on master mode.
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] mode spi mode, use the spi_mode_selection_t
+ * @param [in] config point to spi_control_config_t
+ * @param [in] addr point to address
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+hpm_stat_t spi_write_address(SPI_Type *ptr, spi_mode_selection_t mode, spi_control_config_t *config, uint32_t *addr);
 
 /**
  * @brief spi control initialization
@@ -488,6 +565,328 @@ hpm_stat_t spi_write_command(SPI_Type *ptr, spi_mode_selection_t mode, spi_contr
  */
 hpm_stat_t spi_control_init(SPI_Type *ptr, spi_control_config_t *config, uint32_t wcount, uint32_t rcount);
 
+/**
+ * @brief Get the SPI data length in bits.
+ *
+ * @param ptr SPI base address.
+ * @retval SPI data length in bits
+ */
+static inline uint8_t spi_get_data_length_in_bits(SPI_Type *ptr)
+{
+    return ((ptr->TRANSFMT & SPI_TRANSFMT_DATALEN_MASK) >> SPI_TRANSFMT_DATALEN_SHIFT) + 1;
+}
+
+/**
+ * @brief Get the SPI data length in bytes.
+ *
+ * @param ptr SPI base address.
+ * @retval SPI data length in bytes
+ */
+static inline uint8_t spi_get_data_length_in_bytes(SPI_Type *ptr)
+{
+    return ((spi_get_data_length_in_bits(ptr) + 7U) / 8U);
+}
+
+/**
+ * @brief SPI get active status.
+ *
+ * @param ptr SPI base address.
+ * @retval bool true for active, false for inactive
+ */
+static inline bool spi_is_active(SPI_Type *ptr)
+{
+    return ((ptr->STATUS & SPI_STATUS_SPIACTIVE_MASK) == SPI_STATUS_SPIACTIVE_MASK) ? true : false;
+}
+
+/**
+ * @brief SPI enable tx dma
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_enable_tx_dma(SPI_Type *ptr)
+{
+    ptr->CTRL |= SPI_CTRL_TXDMAEN_MASK;
+}
+
+/**
+ * @brief SPI disable tx dma
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_disable_tx_dma(SPI_Type *ptr)
+{
+    ptr->CTRL &= ~SPI_CTRL_TXDMAEN_MASK;
+}
+
+/**
+ * @brief SPI enable rx dma
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_enable_rx_dma(SPI_Type *ptr)
+{
+    ptr->CTRL |= SPI_CTRL_RXDMAEN_MASK;
+}
+
+/**
+ * @brief SPI disable rx dma
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_disable_rx_dma(SPI_Type *ptr)
+{
+    ptr->CTRL &= ~SPI_CTRL_RXDMAEN_MASK;
+}
+
+/**
+ * @brief SPI slave get sent data count
+ *
+ * @param ptr SPI base address
+ * @retval uint32_t data count
+ */
+static inline uint32_t spi_slave_get_sent_data_count(SPI_Type *ptr)
+{
+#if defined(SPI_SOC_HAS_NEW_TRANS_COUNT) && (SPI_SOC_HAS_NEW_TRANS_COUNT == 1)
+    return ptr->SLVDATAWCNT;
+#else
+    return SPI_SLVDATACNT_WCNT_GET(ptr->SLVDATACNT);
+#endif
+}
+
+/**
+ * @brief SPI slave get received data count
+ *
+ * @param ptr SPI base address
+ * @retval uint32_t data count
+ */
+static inline uint32_t spi_slave_get_received_data_count(SPI_Type *ptr)
+{
+#if defined(SPI_SOC_HAS_NEW_TRANS_COUNT) && (SPI_SOC_HAS_NEW_TRANS_COUNT == 1)
+    return ptr->SLVDATARCNT;
+#else
+    return SPI_SLVDATACNT_RCNT_GET(ptr->SLVDATACNT);
+#endif
+}
+
+/**
+ * @brief set spi clock phase
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] clock_phase clock phase enum
+ */
+static inline void spi_set_clock_phase(SPI_Type *ptr, spi_sclk_sampling_clk_edges_t clock_phase)
+{
+    ptr->TRANSCTRL |= SPI_TRANSFMT_CPHA_SET(clock_phase);
+}
+
+/**
+ * @brief get spi clock phase
+ *
+ * @param [in] ptr SPI base address
+ * @retval spi_sclk_sampling_clk_edges_t spi_sclk_sampling_odd_clk_edges if CPHA is 0
+ */
+static inline spi_sclk_sampling_clk_edges_t spi_get_clock_phase(SPI_Type *ptr)
+{
+    return SPI_TRANSFMT_CPHA_GET(ptr->TRANSCTRL);
+}
+
+/**
+ * @brief set spi clock polarity
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] clock_polarity clock polarity enum
+ */
+static inline void spi_set_clock_polarity(SPI_Type *ptr, spi_sclk_idle_state_t clock_polarity)
+{
+    ptr->TRANSCTRL |= SPI_TRANSFMT_CPOL_SET(clock_polarity);
+}
+
+/**
+ * @brief get spi clock phase
+ *
+ * @param [in] ptr SPI base address
+ * @retval spi_sclk_idle_state_t spi_sclk_low_idle if CPOL is 0
+ */
+static inline spi_sclk_idle_state_t spi_get_clock_polarity(SPI_Type *ptr)
+{
+    return SPI_TRANSFMT_CPOL_GET(ptr->TRANSCTRL);
+}
+
+/**
+ * @brief set spi the length of each data unit in bits
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] nbit the actual bits number of a data
+ * @retval hpm_stat_t status_success if spi transfer without any error
+ */
+static inline hpm_stat_t spi_set_data_bits(SPI_Type *ptr, uint8_t nbits)
+{
+    if (nbits > 32) {
+        return status_invalid_argument;
+    } else {
+        ptr->TRANSFMT = (ptr->TRANSFMT & ~SPI_TRANSFMT_DATALEN_MASK) | SPI_TRANSFMT_DATALEN_SET(nbits - 1);
+        return status_success;
+    }
+}
+
+/**
+ * @brief SPI transmit fifo reset
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_transmit_fifo_reset(SPI_Type *ptr)
+{
+    ptr->CTRL |= SPI_CTRL_TXFIFORST_MASK;
+}
+
+/**
+ * @brief SPI receive fifo reset
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_receive_fifo_reset(SPI_Type *ptr)
+{
+    ptr->CTRL |= SPI_CTRL_RXFIFORST_MASK;
+}
+
+/**
+ * @brief SPI reset
+ *
+ * @param ptr SPI base address
+ */
+static inline void spi_reset(SPI_Type *ptr)
+{
+    ptr->CTRL |= SPI_CTRL_SPIRST_MASK;
+}
+
+/**
+ * @brief set spi the length of address
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] addrlen address lenth enum
+ */
+static inline void spi_set_address_len(SPI_Type *ptr, spi_address_len_t addrlen)
+{
+    ptr->TRANSFMT = (ptr->TRANSFMT & ~SPI_TRANSFMT_ADDRLEN_MASK) | SPI_TRANSFMT_ADDRLEN_SET(addrlen);
+}
+
+/**
+ * @brief   Enable SPI data merge
+ *
+ * @param [in] ptr SPI base address
+ */
+static inline void spi_enable_data_merge(SPI_Type *ptr)
+{
+    ptr->TRANSFMT |= SPI_TRANSFMT_DATAMERGE_MASK;
+}
+
+/**
+ * @brief   Disable SPI data merge
+ *
+ * @param [in] ptr SPI base address
+ */
+static inline void spi_disable_data_merge(SPI_Type *ptr)
+{
+    ptr->TRANSFMT &= ~SPI_TRANSFMT_DATAMERGE_MASK;
+}
+
+#if defined(SPI_SOC_SUPPORT_DIRECTIO) && (SPI_SOC_SUPPORT_DIRECTIO == 1)
+/**
+ * @brief enable specific pin output for spi directio
+ *
+ * @note must be used spi_enable_directio API before enable output function
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] pin spi_directio_pin_t enum
+ */
+hpm_stat_t spi_directio_enable_output(SPI_Type *ptr, spi_directio_pin_t pin);
+
+/**
+ * @brief disable specific pin output for spi directio
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] pin spi_directio_pin_t enum
+ */
+hpm_stat_t spi_directio_disable_output(SPI_Type *ptr, spi_directio_pin_t pin);
+
+/**
+ * @brief write specified pin level  for spi directio
+ *
+ * @param [in] ptr SPI base address
+ * @param [in] pin spi_directio_pin_t enum
+ * @param [in] high Pin level set to high when it is set to true
+ */
+hpm_stat_t spi_directio_write(SPI_Type *ptr, spi_directio_pin_t pin, bool high);
+
+/**
+ * @brief   Read specified pin level for spi directio
+ *
+ * @param [in] ptr SPI base address
+ * @param pin spi_directio_pin_t enum
+ *
+ * @return Pin status
+ */
+uint8_t spi_directio_read(SPI_Type *ptr, spi_directio_pin_t pin);
+
+/**
+ * @brief   Enable SPI directIO control function
+ *
+ * @note if SPI transmission is required, the function must be disable
+ *
+ * @param [in] ptr SPI base address
+ */
+static inline void spi_enable_directio(SPI_Type *ptr)
+{
+    ptr->DIRECTIO |= SPI_DIRECTIO_DIRECTIOEN_MASK;
+}
+
+/**
+ * @brief   Disable SPI directIO control function
+ *
+ * @param [in] ptr SPI base address
+ */
+static inline void spi_disable_directio(SPI_Type *ptr)
+{
+    ptr->DIRECTIO &= ~SPI_DIRECTIO_DIRECTIOEN_MASK;
+}
+
+/**
+ * @brief  get whether spi directio function is enabled
+ *
+ * @param [in] ptr SPI base address
+ *
+ * @return if pi directio function is enable, it will return 1
+ */
+static inline uint8_t spi_get_directio_enable_status(SPI_Type *ptr)
+{
+    return SPI_DIRECTIO_DIRECTIOEN_GET(ptr->DIRECTIO);
+}
+
+#endif
+
+/**
+ * @brief  Get valid data size in receive FIFO
+ *
+ * @param [in] ptr SPI base address
+ * 
+ * @return rx fifo valid data size
+ */
+static inline uint8_t spi_get_rx_fifo_valid_data_size(SPI_Type *ptr)
+{
+    return ((SPI_STATUS_RXNUM_7_6_GET(ptr->STATUS) << 5) | SPI_STATUS_RXNUM_5_0_GET(ptr->STATUS));
+}
+
+/**
+ * @brief  Get valid data size in transmit FIFO
+ *
+ * @param [in] ptr SPI base address
+ * 
+ * @return tx fifo valid data size
+ */
+static inline uint8_t spi_get_tx_fifo_valid_data_size(SPI_Type *ptr)
+{
+    return ((SPI_STATUS_TXNUM_7_6_GET(ptr->STATUS) << 5) | SPI_STATUS_TXNUM_5_0_GET(ptr->STATUS));
+}
 /**
  * @}
  */

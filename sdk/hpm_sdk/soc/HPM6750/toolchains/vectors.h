@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 HPMicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -112,7 +112,7 @@ __vector_table:
     IRQ_HANDLER 86 /* XPI1 IRQ handler */
     IRQ_HANDLER 87 /* XDMA IRQ handler */
     IRQ_HANDLER 88 /* HDMA IRQ handler */
-    IRQ_HANDLER 89 /* DRAM IRQ handler */
+    IRQ_HANDLER 89 /* FEMC IRQ handler */
     IRQ_HANDLER 90 /* RNG IRQ handler */
     IRQ_HANDLER 91 /* I2S0 IRQ handler */
     IRQ_HANDLER 92 /* I2S1 IRQ handler */
@@ -151,3 +151,4 @@ __vector_table:
     IRQ_HANDLER 125 /* SYSCTL IRQ handler */
     IRQ_HANDLER 126 /* DEBUG[0] IRQ handler */
     IRQ_HANDLER 127 /* DEBUG[1] IRQ handler */
+

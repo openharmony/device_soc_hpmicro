@@ -47,6 +47,12 @@ _start:
     la t0, _stack
     mv sp, t0
 
+    /*
+     * Initialize LMA/VMA sections.
+     * Relocation for any sections that need to be copied from LMA to VMA.
+     */
+    call c_startup
+    
 #ifndef NO_CLEANUP_AT_START
     /* clean up */
     call _clean_up

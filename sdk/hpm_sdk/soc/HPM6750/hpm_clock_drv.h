@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 HPMicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -9,6 +9,7 @@
 
 #include "hpm_common.h"
 #include "hpm_sysctl_drv.h"
+#include "hpm_csr_drv.h"
 
 /**
  * @brief CLOCK driver APIs
@@ -50,6 +51,7 @@ enum {
 #define CLK_SRC_GROUP_CPU0 (9U)
 #define CLK_SRC_GROUP_CPU1 (10U)
 #define CLK_SRC_GROUP_SRC (11U)
+#define CLK_SRC_GROUP_PWDG    (12U)
 #define CLK_SRC_GROUP_INVALID (15U)
 
 #define MAKE_CLK_SRC(src_grp, index) (((uint8_t)(src_grp) << 4) | (index))
@@ -85,6 +87,9 @@ typedef enum _clock_sources {
     clk_wdg_src_ahb0 = MAKE_CLK_SRC(CLK_SRC_GROUP_WDG, 0),
     clk_wdg_src_osc32k = MAKE_CLK_SRC(CLK_SRC_GROUP_WDG, 1),
 
+    clk_pwdg_src_osc24m = MAKE_CLK_SRC(CLK_SRC_GROUP_PWDG, 0),
+    clk_pwdg_src_osc32k = MAKE_CLK_SRC(CLK_SRC_GROUP_PWDG, 1),
+
     clk_src_invalid = MAKE_CLK_SRC(CLK_SRC_GROUP_INVALID, 15),
 } clk_src_t;
 
@@ -108,7 +113,7 @@ typedef enum _clock_name {
     clock_axi1 = MAKE_CLOCK_NAME(sysctl_resource_axic, CLK_SRC_GROUP_COMMON, clock_node_axi1),
     clock_axi2 = MAKE_CLOCK_NAME(sysctl_resource_axiv, CLK_SRC_GROUP_COMMON, clock_node_axi2),
     clock_ahb = MAKE_CLOCK_NAME(sysctl_resource_ahbp, CLK_SRC_GROUP_COMMON, clock_node_ahb0),
-    clock_dram = MAKE_CLOCK_NAME(sysctl_resource_dram, CLK_SRC_GROUP_COMMON, clock_node_dram),
+    clock_femc = MAKE_CLOCK_NAME(sysctl_resource_femc, CLK_SRC_GROUP_COMMON, clock_node_femc),
     clock_xpi0 = MAKE_CLOCK_NAME(sysctl_resource_xpi0, CLK_SRC_GROUP_COMMON, clock_node_xpi0),
     clock_xpi1 = MAKE_CLOCK_NAME(sysctl_resource_xpi1, CLK_SRC_GROUP_COMMON, clock_node_xpi1),
     clock_gptmr0 = MAKE_CLOCK_NAME(sysctl_resource_gptmr0, CLK_SRC_GROUP_COMMON, clock_node_gptmr0),
@@ -163,7 +168,7 @@ typedef enum _clock_name {
     clock_watchdog2 = MAKE_CLOCK_NAME(sysctl_resource_wdg2, CLK_SRC_GROUP_WDG, 2),
     clock_watchdog3 = MAKE_CLOCK_NAME(sysctl_resource_wdg3, CLK_SRC_GROUP_WDG, 3),
     clock_puart = MAKE_CLOCK_NAME(RESOURCE_INVALID, CLK_SRC_GROUP_PMIC, 0),
-    clock_pwdg = MAKE_CLOCK_NAME(RESOURCE_INVALID, CLK_SRC_GROUP_PMIC, 1),
+    clock_pwdg = MAKE_CLOCK_NAME(RESOURCE_INVALID, CLK_SRC_GROUP_PWDG, 0),
     clock_eth0 = MAKE_CLOCK_NAME(sysctl_resource_eth0, CLK_SRC_GROUP_COMMON, clock_node_eth0),
     clock_eth1 = MAKE_CLOCK_NAME(sysctl_resource_eth1, CLK_SRC_GROUP_COMMON, clock_node_eth1),
     clock_ptp0 = MAKE_CLOCK_NAME(RESOURCE_INVALID, CLK_SRC_GROUP_COMMON, clock_node_ptp0),
@@ -188,8 +193,8 @@ typedef enum _clock_name {
     clock_mot2 = MAKE_CLOCK_NAME(sysctl_resource_mot2, CLK_SRC_GROUP_AHB, 8),
     clock_mot3 = MAKE_CLOCK_NAME(sysctl_resource_mot3, CLK_SRC_GROUP_AHB, 9),
     clock_acmp = MAKE_CLOCK_NAME(sysctl_resource_acmp, CLK_SRC_GROUP_AHB, 10),
-    clock_pdm = MAKE_CLOCK_NAME(sysctl_resource_i2spdm0, CLK_SRC_GROUP_AHB, 11),
-    clock_dao = MAKE_CLOCK_NAME(sysctl_resource_i2sdao, CLK_SRC_GROUP_AHB, 12),
+    clock_pdm = MAKE_CLOCK_NAME(sysctl_resource_i2spdm0, CLK_SRC_GROUP_I2S, 0),
+    clock_dao = MAKE_CLOCK_NAME(sysctl_resource_i2sdao, CLK_SRC_GROUP_I2S, 1),
     clock_msyn = MAKE_CLOCK_NAME(sysctl_resource_msyn, CLK_SRC_GROUP_AHB, 12),
     clock_lmm0 = MAKE_CLOCK_NAME(sysctl_resource_lmm0, CLK_SRC_GROUP_CPU0, 0),
     clock_lmm1 = MAKE_CLOCK_NAME(sysctl_resource_lmm1, CLK_SRC_GROUP_CPU1, 0),
@@ -309,6 +314,13 @@ extern "C"
      * @param[in] group resource group index, valid value: 0/1/2/3
      */
     void clock_remove_from_group(clock_name_t clock_name, uint32_t group);
+
+    /**
+     * @brief Check IP in specified group
+     * @param[in] clock_name IP clock name
+     * @return true if in group, false if not in group
+     */
+    bool clock_check_in_group(clock_name_t clock_name, uint32_t group);
 
     /**
      * @brief Disconnect the clock group from specified CPU

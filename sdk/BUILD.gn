@@ -70,6 +70,7 @@ config("public") {
 
   if (defined(LOSCFG_NET_LWIP_SACK)) {
      include_dirs += [
+      "${hpm_sdk_path}/components/enet_phy",
       "${hpm_sdk_path}/components/enet_phy/rtl8201",
       "${hpm_sdk_path}/components/enet_phy/rtl8211",
     ]   

@@ -129,6 +129,7 @@ hpm_stat_t sysctl_cpu1_set_gpr(SYSCTL_Type *ptr,
 
 void sysctl_monitor_get_default_config(SYSCTL_Type *ptr, monitor_config_t *config)
 {
+    (void) ptr;
     config->mode = monitor_work_mode_record;
     config->accuracy = monitor_accuracy_1khz;
     config->reference = monitor_reference_24mhz;
@@ -180,7 +181,7 @@ uint32_t sysctl_monitor_measure_frequency(SYSCTL_Type *ptr,
     return frequency;
 }
 
-static hpm_stat_t _sysctl_set_cpu_entry(SYSCTL_Type *ptr, uint8_t cpu, uint32_t entry)
+hpm_stat_t sysctl_set_cpu_entry(SYSCTL_Type *ptr, uint8_t cpu, uint32_t entry)
 {
     if (!sysctl_valid_cpu_index(cpu)) {
         return status_invalid_argument;
@@ -192,31 +193,12 @@ static hpm_stat_t _sysctl_set_cpu_entry(SYSCTL_Type *ptr, uint8_t cpu, uint32_t 
 
 hpm_stat_t sysctl_set_cpu1_entry(SYSCTL_Type *ptr, uint32_t entry)
 {
-    return _sysctl_set_cpu_entry(ptr, 1, entry);
+    return sysctl_set_cpu_entry(ptr, 1, entry);
 }
 
 hpm_stat_t sysctl_set_cpu0_wakeup_entry(SYSCTL_Type *ptr, uint32_t entry)
 {
-    return _sysctl_set_cpu_entry(ptr, 0, entry);
-}
-
-void sysctl_release_cpu1(SYSCTL_Type *ptr)
-{
-    ptr->CPU[1].LP &= ~SYSCTL_CPU_LP_HALT_MASK;
-}
-
-bool sysctl_is_cpu1_released(SYSCTL_Type *ptr)
-{
-    return ((ptr->CPU[1].LP & SYSCTL_CPU_LP_HALT_MASK) == 0U);
-}
-
-hpm_stat_t sysctl_set_cpu_lp_mode(SYSCTL_Type *ptr, uint8_t cpu, cpu_lp_mode_t mode)
-{
-    if (!sysctl_valid_cpu_index(cpu)) {
-        return status_invalid_argument;
-    }
-    ptr->CPU[cpu].LP = (ptr->CPU[cpu].LP & ~(SYSCTL_CPU_LP_MODE_MASK)) | (mode);
-    return status_success;
+    return sysctl_set_cpu_entry(ptr, 0, entry);
 }
 
 hpm_stat_t sysctl_enable_group_resource(SYSCTL_Type *ptr,
@@ -232,19 +214,70 @@ hpm_stat_t sysctl_enable_group_resource(SYSCTL_Type *ptr,
     index = (linkable_resource - sysctl_resource_linkable_start) / 32;
     offset = (linkable_resource - sysctl_resource_linkable_start) % 32;
     switch (group) {
-        case SYSCTL_RESOURCE_GROUP0:
-            ptr->GROUP0[index].VALUE = (ptr->GROUP0[index].VALUE & ~(1UL << offset))
-                | (enable ? (1UL << offset) : 0);
-            break;
-        case SYSCTL_RESOURCE_GROUP1:
-            ptr->GROUP1[index].VALUE = (ptr->GROUP1[index].VALUE & ~(1UL << offset))
-                | (enable ? (1UL << offset) : 0);
-            break;
-        default:
-            return status_invalid_argument;
+    case SYSCTL_RESOURCE_GROUP0:
+        ptr->GROUP0[index].VALUE = (ptr->GROUP0[index].VALUE & ~(1UL << offset))
+            | (enable ? (1UL << offset) : 0);
+        if (enable) {
+            while (sysctl_resource_target_is_busy(ptr, linkable_resource)) {
+                ;
+            }
+        }
+        break;
+    case SYSCTL_RESOURCE_GROUP1:
+        ptr->GROUP1[index].VALUE = (ptr->GROUP1[index].VALUE & ~(1UL << offset))
+            | (enable ? (1UL << offset) : 0);
+        if (enable) {
+            while (sysctl_resource_target_is_busy(ptr, linkable_resource)) {
+                ;
+            }
+        }
+        break;
+    default:
+        return status_invalid_argument;
     }
 
     return status_success;
+}
+
+bool sysctl_check_group_resource_enable(SYSCTL_Type *ptr,
+                                        uint8_t group,
+                                        sysctl_resource_t linkable_resource)
+{
+    uint32_t index, offset;
+    bool enable;
+
+    index = (linkable_resource - sysctl_resource_linkable_start) / 32;
+    offset = (linkable_resource - sysctl_resource_linkable_start) % 32;
+    switch (group) {
+    case SYSCTL_RESOURCE_GROUP0:
+        enable = ((ptr->GROUP0[index].VALUE & (1UL << offset)) != 0) ? true : false;
+        break;
+    case SYSCTL_RESOURCE_GROUP1:
+        enable = ((ptr->GROUP1[index].VALUE & (1UL << offset)) != 0) ? true : false;
+        break;
+    default:
+        enable =  false;
+        break;
+    }
+
+    return enable;
+}
+
+uint32_t sysctl_get_group_resource_value(SYSCTL_Type *ptr, uint8_t group, uint8_t index)
+{
+    uint32_t value;
+    switch (group) {
+    case SYSCTL_RESOURCE_GROUP0:
+        value = ptr->GROUP0[index].VALUE;
+        break;
+    case SYSCTL_RESOURCE_GROUP1:
+        value = ptr->GROUP1[index].VALUE;
+        break;
+    default:
+        value = 0;
+        break;
+    }
+    return value;
 }
 
 hpm_stat_t sysctl_add_resource_to_cpu0(SYSCTL_Type *ptr, sysctl_resource_t resource)
