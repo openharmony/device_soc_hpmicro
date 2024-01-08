@@ -71,11 +71,13 @@ HPM6700/6400 系列 MCU 是来自上海先楫半导体科技有限公司的高�
 
 ### OpenHarmony开发环境搭建
 
-[环境搭建](https://gitee.com/openharmony/docs/blob/OpenHarmony-v3.2-Beta3/zh-cn/device-dev/quick-start/quickstart-lite-env-setup.md)
+
+- [准备开发环境](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/quick-start/quickstart-pkg-prepare.md)
+- [安装库和工具集](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/quick-start/quickstart-pkg-install-package.md)
 
 ### 编译工具安装
 
-[编译器安装:gcc_riscv32](https://gitee.com/openharmony/docs/blob/OpenHarmony-v3.2-Beta5/zh-cn/device-dev/quick-start/quickstart-pkg-3861-tool.md#%E5%AE%89%E8%A3%85gcc_riscv32wlan%E6%A8%A1%E7%BB%84%E7%B1%BB%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE) 或者直接下载 [可直接下载](https://repo.huaweicloud.com/harmonyos/compiler/gcc_riscv32/7.3.0/linux/gcc_riscv32-linux-7.3.0.tar.gz)
+- [gcc工具下载](https://repo.huaweicloud.com/harmonyos/compiler/gcc_riscv32/7.3.0/linux/gcc_riscv32-linux-7.3.0.tar.gz)
 
 
 **设置环境变量**
@@ -111,9 +113,43 @@ gcc version 7.3.0 (GCC)
 
 ### 源码获取
 
-#### 参考如下链接获取OpenHarmony源码
+- [获取源码](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/quick-start/quickstart-pkg-sourcecode.md)
+- [安装hb工具](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/quick-start/quickstart-pkg-install-tool.md)
 
-[代码获取](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/device-dev/get-code/sourcecode-acquire.md)
+**注意**
+
+> 默认下载的是master分支版本，如果想下载其他分支版本请将`-b master`改为需要下载的分支。
+
+**比如下载OpenHarmony-4.0-Release:**
+
+```
+repo init -u git@gitee.com:openharmony/manifest.git -b OpenHarmony-4.0-Release --no-repo-verify
+```
+
+**hb 安装报错**
+
+```
+  WARNING: The scripts alldefconfig, allmodconfig, allnoconfig, allyesconfig, defconfig, genconfig, guiconfig, listnewconfig, menuconfig, oldconfig, olddefconfig, savedefconfig and setconfig are installed in '/home/xxx/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script hb is installed in '/home/xxx/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.```
+```
+
+解决办法：
+
+1. 将以下命令拷贝到.bashrc文件的最后一行，保存并退出。
+
+```
+export PATH=~/.local/bin:$PATH
+```
+
+2. 执行如下命令更新环境变量
+
+```
+source ~/.bashrc
+python3 -m pip uninstall ohos-build   
+python3 -m pip install --user build/hb
+```
 
 
 ## 工程编译
@@ -123,6 +159,12 @@ gcc version 7.3.0 (GCC)
 执行`hb set`选择`hpmicro`下的`hpm6750evk2`:
 
 ![hpm6750evk2_hbset](figures/hbset.png)
+
+### 也可以直接通过命令指定
+
+```
+hb set -p hpm6750evk2
+```
 
 ### 编译工程
 
@@ -139,11 +181,11 @@ gcc version 7.3.0 (GCC)
 
 ### 下载安装烧录工具(windows)
 
-点击[HPMProgrammmer_v0.2.0](https://gitee.com/huohongpeng/hpmprogrammmer/releases/download/v0.2.0/HPMProgrammmer_v0.2.0.zip)下载
+点击[先楫系列资料](https://pan.baidu.com/s/1RaYHOD7xk7fnotmgLpoAlA?pwd=xk2n)下载`sdk/HPMicro_Manufacturing_Tool_vx.x.x.zip`
 
-下载后解压HPMProgrammmer_v0.2.0.zip文件到任意目录。
+下载后解压HPMicro_Manufacturing_Tool_vx.x.x.zip文件到任意目录。
 
-找到`HPMProgrammer.exe`，双击执行程序：
+找到`hpm_manufacturing_gui.exe`，双击执行程序：
 
 ![程序初始界面](figures/HPMProgrammer_start.png)
 
@@ -160,14 +202,18 @@ gcc version 7.3.0 (GCC)
 
     > 拨码开关设置好后，点击开发板的`RESTN`按钮，进行复位，复位后进入到isp模式。
 
-3. HPMProgrammer的`Port Configuration`选择步骤1识别到的串口，点击`Attach`按钮，在ISP模式下可识别到开发板：
-![Attach开发板](figures/attach_success.png)
+3. 配置hpm_manufacturing_gui的`类型为：UART`并选择选择步骤1中对用的串口，点击`连接`：
+![连接开发板](figures/connecting.png)
+
+连接成功：
+
+![连接成功](figures/connected.png)
 
 4. 拷贝编译好的固件程序`out/hpm6750evk2/hpm6750evk2/OHOS_Image.bin`到windows。
 
-5. 点击`Open File`选择固件程序，点击`Program`进行下载:
+5. 选择固件程序，点击`烧写`进行下载:
 
-![固件下载](figures/download_success.png)
+![固件下载](figures/downloading.png)
 
 6. 设置拨码开关为正常模式
 
@@ -176,9 +222,120 @@ gcc version 7.3.0 (GCC)
     boot1: 0 
     ```
 
-7. 打开一个串口终端，重启开发板，串口打印启动信息
+7. 打开一个串口终端`MobaXterm`，重启开发板，串口打印启动信息
 
 ![启动信息](figures/boot_info.png)
+
+8. hpm_manufacturing_gui更多用法，请参考：`HPMicro_Manufacturing_Tool_vx.x.x\doc\user_manual.html`
+
+
+### openocd进行调试镜像
+
+1. 下载openocd
+
+```
+git clone git@gitee.com:hpmicro/riscv-openocd.git -b riscv-hpmicro
+```
+2. 安装依赖工具
+
+```
+sudo apt install libtool libusb-1.0-0-dev libhidapi-dev libftdi-dev
+```
+
+3. 安装
+
+进入源码目录，并执行下面的命令
+
+```
+./bootstrap
+./configure
+make -j16
+sudo make install
+sudo cp contrib/60-openocd.rules /etc/udev/rules.d/
+
+```
+
+4. 连接烧写和目标板
+
+5. 启动openocd
+
+进入到ohos源码`device/soc/hpmicro/sdk/hpm_sdk/boards/openocd`,执行如下命令：
+
+```
+$ openocd -s . -f probes/cmsis_dap.cfg -f soc/hpm6750-single-core.cfg -f boards/hpm6750evk2.cfg
+Open On-Chip Debugger 0.11.0+dev (2024-01-08-14:39)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+srst_only separate srst_gates_jtag srst_open_drain connect_deassert_srst
+
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
+Info : CMSIS-DAP: SWD supported
+Info : CMSIS-DAP: JTAG supported
+Info : CMSIS-DAP: Atomic commands supported
+Info : CMSIS-DAP: Test domain timer supported
+Info : CMSIS-DAP: FW Version = 2.0.0
+Info : CMSIS-DAP: Interface Initialised (JTAG)
+Info : SWCLK/TCK = 0 SWDIO/TMS = 1 TDI = 0 TDO = 1 nTRST = 0 nRESET = 0
+Info : CMSIS-DAP: Interface ready
+Info : clock speed 8000 kHz
+Info : cmsis-dap JTAG TLR_RESET
+Info : cmsis-dap JTAG TLR_RESET
+Info : JTAG tap: hpm6750.cpu tap/device found: 0x1000563d (mfg: 0x31e (Andes Technology Corporation), part: 0x0005, ver: 0x1)
+Info : [hpm6750.cpu0] datacount=4 progbufsize=8
+Info : Examined RISC-V core; found 2 harts
+Info :  hart 0: XLEN=32, misa=0x4094112d
+[hpm6750.cpu0] Target successfully examined.
+Info : starting gdb server for hpm6750.cpu0 on 3333
+Info : Listening on port 3333 for gdb connections
+
+```
+
+6. 打开另一个终端,并进入ohos源码目录，启动gdb
+
+```
+$ riscv32-unknown-elf-gdb
+GNU gdb (GDB) 8.1.50.20180718-git
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "--host=x86_64-pc-linux-gnu --target=riscv32-unknown-elf".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+(gdb)
+```
+
+7. 选择需要调试的镜像，并进行加载调试
+
+```
+(gdb) file out/hpm6750evk2/hpm6750evk2/OHOS_Image
+Reading symbols from out/hpm6750evk2/hpm6750evk2/OHOS_Image...done.
+(gdb) target extended-remote :3333
+Remote debugging using :3333
+warning: Target-supplied registers are not supported by the current architecture
+_start () at ../../../device/soc/hpmicro/hpm6700/liteos_m/los_start.S:26
+26	    la gp, __global_pointer$
+(gdb) load
+Loading section .nor_cfg_option, size 0x10 lma 0x80000400
+Loading section .boot_header, size 0x90 lma 0x80001000
+Loading section .start, size 0x2e lma 0x80003000
+Loading section .vectors, size 0x3c0 lma 0x8000302e
+Loading section .text, size 0x5876e lma 0x800033ee
+Loading section .data, size 0x1158 lma 0x8005bb5c
+Start address 0x80003000, load size 367956
+Transfer rate: 6 KB/sec, 13141 bytes/write.
+(gdb) c
+
+```
 
 ## 相关仓库
 
