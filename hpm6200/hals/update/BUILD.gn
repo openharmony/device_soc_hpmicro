@@ -11,8 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-config SOC_SERIES_HPM6700
-    bool "HPMicro HPM6700 Series"
-    help
-        Enable support for HPM6700
+import("//build/lite/config/component/lite_component.gni")
 
+static_library("hal_update_static") {
+  sources = [ "hal_hota_board.c" ]
+  include_dirs = [
+    "//base/update/ota_lite/hals",
+    "//base/update/ota_lite/interfaces/kits",
+  ]
+}

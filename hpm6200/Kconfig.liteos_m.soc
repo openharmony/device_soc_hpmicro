@@ -11,8 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-config SOC_SERIES_HPM6700
-    bool "HPMicro HPM6700 Series"
-    help
-        Enable support for HPM6700
+choice
+    prompt "HPM6200 series SoC Selection"
+    depends on SOC_SERIES_HPM6200
+    default SOC_HPM6280
 
+config SOC_HPM6280
+    bool "HPM6280"
+
+endchoice

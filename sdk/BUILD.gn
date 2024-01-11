@@ -46,6 +46,20 @@ kernel_module(module_name) {
     ]
   }
 
+  if (defined(LOSCFG_SOC_HPM6280)) {
+    sources += [
+      "${hpm_sdk_path}/soc/HPM6280/toolchains/reset.c",
+      "${hpm_sdk_path}/soc/HPM6280/boot/hpm_bootheader.c",
+      "${hpm_sdk_path}/soc/HPM6280/hpm_sysctl_drv.c",
+      "${hpm_sdk_path}/soc/HPM6280/system.c",
+      "${hpm_sdk_path}/soc/HPM6280/hpm_l1c_drv.c",
+      "${hpm_sdk_path}/soc/HPM6280/hpm_otp_drv.c",
+      "${hpm_sdk_path}/soc/HPM6280/hpm_clock_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
+    ]
+  }
+
   if (defined(LOSCFG_NET_LWIP_SACK)) {
      sources += [
       "${hpm_sdk_path}/components/enet_phy/rtl8201/hpm_rtl8201.c",
@@ -65,6 +79,13 @@ config("public") {
     include_dirs += [ 
         "${hpm_sdk_path}/soc/HPM6750",
         "${hpm_sdk_path}/soc/HPM6750/boot",
+    ]
+  }
+
+  if (defined(LOSCFG_SOC_HPM6280)) {
+    include_dirs += [ 
+        "${hpm_sdk_path}/soc/HPM6280",
+        "${hpm_sdk_path}/soc/HPM6280/boot",
     ]
   }
 
