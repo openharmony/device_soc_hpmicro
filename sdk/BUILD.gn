@@ -74,6 +74,20 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
     ]
   }
+  
+  if (defined(LOSCFG_SOC_HPM5300)) {
+    sources += [
+      "${hpm_sdk_path}/soc/HPM5361/toolchains/reset.c",
+      "${hpm_sdk_path}/soc/HPM5361/boot/hpm_bootheader.c",
+      "${hpm_sdk_path}/soc/HPM5361/hpm_sysctl_drv.c",
+      "${hpm_sdk_path}/soc/HPM5361/system.c",
+      "${hpm_sdk_path}/soc/HPM5361/hpm_l1c_drv.c",
+      "${hpm_sdk_path}/soc/HPM5361/hpm_otp_drv.c",
+      "${hpm_sdk_path}/soc/HPM5361/hpm_clock_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
+    ]
+  }
 
   if (defined(LOSCFG_NET_LWIP_SACK)) {
      sources += [
@@ -108,6 +122,13 @@ config("public") {
     include_dirs += [ 
         "${hpm_sdk_path}/soc/HPM6280",
         "${hpm_sdk_path}/soc/HPM6280/boot",
+    ]
+  }
+
+  if (defined(LOSCFG_SOC_HPM5300)) {
+    include_dirs += [ 
+        "${hpm_sdk_path}/soc/HPM5361",
+        "${hpm_sdk_path}/soc/HPM5361/boot",
     ]
   }
 
