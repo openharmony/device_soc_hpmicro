@@ -24,6 +24,10 @@ if (ohos_kernel_type == "liteos_m") {
       modules += [ "hpm6700" ]
     }
 
+    if (defined(LOSCFG_SOC_SERIES_HPM6800)) {
+      modules += [ "hpm6800" ]
+    }
+
     if (defined(LOSCFG_SOC_SERIES_HPM6400)) {
       modules += [ "hpm6400" ]
     }
