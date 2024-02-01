@@ -28,6 +28,7 @@
 #include "riscv_hal.h"
 #include "hiview_output_log.h"
 #include "hpm_littlefs.h"
+#include "show.h"
 
 int DeviceManagerStart(void);
 void OHOS_SystemInit(void);
@@ -77,6 +78,7 @@ LITE_OS_SEC_TEXT_INIT INT32 main(VOID)
 
 #if (LOSCFG_USE_SHELL == 1)
     ret = LosShellInit();
+    (VOID)OsShellInit();
     if (ret != LOS_OK) {
         printf("LosShellInit failed! ERROR: 0x%x\n", ret);
     }

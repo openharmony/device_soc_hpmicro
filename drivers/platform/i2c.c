@@ -64,6 +64,44 @@ static int32_t hpmTransfer(struct I2cCntlr *cntlr, struct I2cMsg *msgs, int16_t 
     return 0;
 }
 
+int32_t hpmReceive(struct I2cCntlr *cntlr, struct I2cMsg *msgs, int16_t count)
+{
+    hpm_stat_t stat;
+    struct HPMI2cDevice *hpmI2cDev = (struct HPMI2cDevice *)cntlr->priv;
+    I2C_Type *base = (I2C_Type *)hpmI2cDev->base;
+
+    for (int i = 0; i < count; i++) {
+        /*
+         * TODO: Another flags: I2C_FLAG_NO_START, I2C_FLAG_STOP, I2C_FLAG_READ_NO_ACK
+         */
+        if (msgs[i].flags & I2C_FLAG_READ) {
+            /* wait for address hit */
+            do {
+                stat = i2c_slave_read(base, msgs[i].buf, msgs[i].len);
+            } while (stat == status_fail);
+
+            if (stat != status_success) {
+                printf("Slave read failed\n");
+                while (1) {
+                }
+            }
+
+            /* wait for address hit */
+            do {
+                stat = i2c_slave_write(base, msgs[i].buf, msgs[i].len);
+            } while (stat == status_fail);
+
+            if (stat != status_success) {
+                printf("Slave write failed");
+                while (1) {
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 static struct I2cMethod hpmI2cMethod = {
     .transfer = hpmTransfer,
 };
