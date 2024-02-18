@@ -36,6 +36,8 @@ struct HPMSpiDevice {
     struct SpiCfg cfg;
 };
 
+extern spi_control_config_t control_config;
+
 static void HpmSpiConfig(struct SpiCntlr *cntlr)
 {
     struct HPMSpiDevice *hpmSpiDev = (struct HPMSpiDevice *)cntlr->priv;
@@ -101,6 +103,12 @@ static int32_t HpmSpiTransfer(struct SpiCntlr *cntlr, struct SpiMsg *msg, uint32
 
     spi_control_config_t config;
     spi_master_get_default_control_config(&config);
+
+    config.master_config.cmd_enable = control_config.master_config.cmd_enable;  /* cmd phase control for master */
+    config.master_config.addr_enable = control_config.master_config.addr_enable; /* address phase control for master */
+    config.slave_config.slave_data_only = control_config.slave_config.slave_data_only;
+    config.common_config.trans_mode = control_config.common_config.trans_mode;
+
     uint32_t rLen;
     uint32_t wLen;
 
