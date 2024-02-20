@@ -36,7 +36,7 @@ struct HPMSpiDevice {
     struct SpiCfg cfg;
 };
 
-extern spi_control_config_t control_config;
+spi_control_config_t control_config = {0};
 
 static void HpmSpiConfig(struct SpiCntlr *cntlr)
 {

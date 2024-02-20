@@ -1,0 +1,6 @@
+#include "../config_template/watchdog.hcs"
+#include "../config_template/gpio.hcs"
+#include "../config_template/uart.hcs"
+#include "../config_template/i2c.hcs"
+#include "../config_template/spi.hcs"
+
