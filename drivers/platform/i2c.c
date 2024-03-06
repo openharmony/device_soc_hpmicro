@@ -24,6 +24,7 @@
 #include "i2c_core.h"
 #include "hpm_i2c_drv.h"
 #include <los_interrupt.h>
+#include "board.h"
 
 #define HDF_LOG_TAG HPMICRO_I2C_HDF
 
@@ -37,6 +38,18 @@ static int32_t hpmTransfer(struct I2cCntlr *cntlr, struct I2cMsg *msgs, int16_t 
 {
     struct HPMI2cDevice *hpmI2cDev = (struct HPMI2cDevice *)cntlr->priv;
     I2C_Type *base = (I2C_Type *)hpmI2cDev->base;
+    hpm_stat_t stat;
+    i2c_config_t config;
+    uint32_t freq;
+
+    config.i2c_mode = i2c_mode_normal;
+    config.is_10bit_addressing = false;
+    freq = clock_get_frequency(TEST_I2C_CLOCK_NAME);
+    stat = i2c_init_master(base, freq, &config);
+    if (stat != status_success) {
+        return stat;
+    }
+
 
     for (int i = 0; i < count; i++) {
         if (msgs[i].flags & I2C_FLAG_ADDR_10BIT) {
