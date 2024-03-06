@@ -27,7 +27,6 @@ kernel_module(module_name) {
     "${hpm_sdk_path}/drivers/src/hpm_mchtmr_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_pmp_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_can_drv.c",
-    "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_i2c_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_spi_drv.c",
   ]
@@ -43,6 +42,7 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/soc/HPM6750/hpm_clock_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pllctl_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
     ]
   }
 
@@ -58,6 +58,7 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
     ]
   }
 
@@ -73,6 +74,7 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_ewdg_drv.c",
     ]
   }
 
@@ -87,6 +89,7 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/soc/HPM6280/hpm_clock_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
     ]
   }
   
@@ -101,6 +104,7 @@ kernel_module(module_name) {
       "${hpm_sdk_path}/soc/HPM5361/hpm_clock_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
+      "${hpm_sdk_path}/drivers/src/hpm_ewdg_drv.c",
     ]
   }
 

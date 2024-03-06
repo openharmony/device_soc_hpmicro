@@ -57,9 +57,16 @@ hdf_driver(module_name) {
   }
 
   if (defined(LOSCFG_DRIVERS_HDF_PLATFORM_WATCHDOG)) {
-    sources += [
-      "watchdog.c"
-    ]
+    if(defined(LOSCFG_SOC_SERIES_HPM6800) || defined(LOSCFG_SOC_SERIES_HPM5300)){
+      sources += [
+        "ewatchdog.c"
+      ]
+    }
+    else{
+        sources += [
+          "watchdog.c"
+      ]
+    }
   }
 
   if (defined(LOSCFG_DRIVERS_HDF_PLATFORM_SPI)) {
