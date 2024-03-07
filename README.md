@@ -264,7 +264,6 @@ sudo cp contrib/60-openocd.rules /etc/udev/rules.d/
 ```
 $ openocd -s . -f probes/cmsis_dap.cfg -f soc/hpm6750-single-core.cfg -f boards/hpm6750evk2.cfg
 Open On-Chip Debugger 0.11.0+dev (2024-01-08-14:39)
-Licensed under GNU GPL v2
 For bug reports, read
 	http://openocd.org/doc/doxygen/bugs.html
 srst_only separate srst_gates_jtag srst_open_drain connect_deassert_srst
@@ -298,7 +297,6 @@ Info : Listening on port 3333 for gdb connections
 $ riscv32-unknown-elf-gdb
 GNU gdb (GDB) 8.1.50.20180718-git
 Copyright (C) 2018 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 Type "show copying" and "show warranty" for details.
