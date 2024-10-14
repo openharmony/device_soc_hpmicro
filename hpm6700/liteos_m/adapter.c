@@ -28,3 +28,9 @@ __attribute__((weak)) void IoTWatchDogDisable(void)
 {
 
 }
+
+#include <stdio.h>
+__attribute__((weak)) void setbuf(FILE *restrict f, char *restrict buf)
+{
+
+}
