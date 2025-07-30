@@ -1,0 +1,3 @@
+dependency:
+  - pdm || pdmlite
+  - board_audio_in

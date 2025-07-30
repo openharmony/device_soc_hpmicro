@@ -22,7 +22,6 @@ hpm_mcl_stat_t hpm_mcl_encoder_init(mcl_encoder_t *encoder, mcl_cfg_t *mcl_cfg, 
     MCL_ASSERT((encoder_cfg->callback.start_sample != NULL), mcl_invalid_pointer);
     MCL_ASSERT(((encoder_cfg->disable_start_sample_interrupt == true) || (encoder_cfg->callback.get_lead_tick != NULL)), mcl_invalid_pointer);
     MCL_ASSERT(((encoder_cfg->disable_start_sample_interrupt == true) || (encoder_cfg->callback.update_trig_lead_tick != NULL)), mcl_invalid_pointer);
-    MCL_ASSERT((encoder_cfg->callback.init != NULL), mcl_invalid_pointer);
     MCL_ASSERT((encoder_cfg->callback.get_theta != NULL), mcl_invalid_pointer);
     MCL_ASSERT((encoder_cfg->speed_cal_method != encoder_method_user) || (encoder_cfg->callback.process_by_user != NULL), mcl_invalid_argument);
     /**
@@ -41,6 +40,7 @@ hpm_mcl_stat_t hpm_mcl_encoder_init(mcl_encoder_t *encoder, mcl_cfg_t *mcl_cfg, 
      *
      */
     encoder->cfg = encoder_cfg;
+    encoder->phase = &mcl_cfg->physical.motor.hall;
     encoder->result.speed = 0;
     encoder->result.theta = 0;
     encoder->result.theta_forecast = 0;
@@ -49,11 +49,14 @@ hpm_mcl_stat_t hpm_mcl_encoder_init(mcl_encoder_t *encoder, mcl_cfg_t *mcl_cfg, 
     encoder->force_set_theta.value = 0;
 
     encoder->status = encoder_status_init;
-    encoder->cfg->callback.init();
+    if (encoder->cfg->callback.init != NULL) {
+        encoder->cfg->callback.init();
+    }
     MCL_ASSERT(encoder->cfg->callback.start_sample() == mcl_success, mcl_encoder_start_sample_error);
     mcl_user_delay_us(encoder->cfg->communication_interval_us * 2);
     MCL_ASSERT((encoder->cfg->callback.get_theta(&encoder->theta_initial) == mcl_success), mcl_encoder_get_theta_error);
     encoder->status = encoder_status_run;
+    encoder->sensorless.enable = NULL;
 
     return mcl_success;
 }
@@ -73,17 +76,6 @@ hpm_mcl_stat_t hpm_mcl_encoder_start_sample(mcl_encoder_t *encoder)
     return mcl_success;
 }
 
-/**
- * @brief Sets the initial value of the angle. Normally,
- * the programme does the initial value setting automatically,
- * but if you are not satisfied with the result, you can set the initial value.
- * The initial value determines the zero point of the electrical angle.
- * This means that the angle read by the sensor is calibrated to zero by the initial value
- *
- * @param encoder @ref mcl_encoder_t
- * @param theta Used to calibrate electrical angle to zero
- * @return hpm_mcl_stat_t @ref hpm_mcl_stat_t
- */
 hpm_mcl_stat_t hpm_mcl_encoder_set_initial_theta(mcl_encoder_t *encoder, float theta)
 {
     MCL_ASSERT(encoder != NULL, mcl_invalid_pointer);
@@ -99,7 +91,7 @@ hpm_mcl_stat_t hpm_mcl_encoder_process(mcl_encoder_t *encoder, uint32_t tick_det
     float speed;
     float theta_forecast;
     float theta_integrator;
-    float theta_deta;
+    float theta_delta;
     hpm_mcl_stat_t status;
 
     MCL_ASSERT_OPT(encoder != NULL, mcl_invalid_pointer);
@@ -107,6 +99,9 @@ hpm_mcl_stat_t hpm_mcl_encoder_process(mcl_encoder_t *encoder, uint32_t tick_det
     MCL_ASSERT((encoder->status == encoder_status_run), mcl_encoder_not_ready);
     MCL_ASSERT_EXEC_CODE_AND_RETURN(encoder->cfg->callback.get_theta(&theta) == mcl_success,
         encoder->status = encoder_status_fail, mcl_encoder_get_theta_error);
+    if ((encoder->sensorless.enable != NULL) && (*encoder->sensorless.enable == true)) {
+        theta = *encoder->sensorless.theta;
+    }
     if (encoder->force_set_theta.enable) {
         theta = encoder->force_set_theta.value;
     } else {
@@ -119,13 +114,13 @@ hpm_mcl_stat_t hpm_mcl_encoder_process(mcl_encoder_t *encoder, uint32_t tick_det
         break;
     case encoder_method_m:
         ts = (float)tick_deta / (*encoder->mcu_clock_tick);
-        theta_deta = MCL_ANGLE_MOD_X((-MCL_PI), MCL_PI, (theta - encoder->cal_speed.m_method.theta_last));
-        if (MCL_FLOAT_IS_ZERO(theta_deta)) {
+        theta_delta = MCL_GET_ANGLE_DELTA((theta - encoder->cal_speed.m_method.theta_last), MCL_2PI);
+        if (MCL_FLOAT_IS_ZERO(theta_delta)) {
             encoder->cal_speed.m_method.ts_sigma += ts;
         } else {
             encoder->cal_speed.m_method.ts_sigma = 0;
         }
-        speed = theta_deta / ts;
+        speed = theta_delta / ts;
         if (encoder->cal_speed.m_method.ts_sigma >= encoder->cfg->timeout_s) {
             speed = 0;
             encoder->cal_speed.m_method.ts_sigma = encoder->cfg->timeout_s + 1;
@@ -134,12 +129,12 @@ hpm_mcl_stat_t hpm_mcl_encoder_process(mcl_encoder_t *encoder, uint32_t tick_det
         break;
     case encoder_method_t:
         ts = tick_deta / (*encoder->mcu_clock_tick);
-        theta_deta = MCL_ANGLE_MOD_X((-MCL_PI), MCL_PI, (theta - encoder->cal_speed.t_method.theta_last));
-        if (MCL_FLOAT_IS_ZERO(theta_deta)) {
-            encoder->cal_speed.t_method.ts_sigma += ts;
+        theta_delta = MCL_GET_ANGLE_DELTA((theta - encoder->cal_speed.t_method.theta_last), MCL_2PI);
+        encoder->cal_speed.t_method.ts_sigma += ts;
+        if (MCL_FLOAT_IS_ZERO(theta_delta)) {
             speed = encoder->cal_speed.t_method.speed_last;
         } else {
-            speed = theta_deta / encoder->cal_speed.t_method.ts_sigma;
+            speed = theta_delta / encoder->cal_speed.t_method.ts_sigma;
             encoder->cal_speed.t_method.ts_sigma = 0;
         }
         if (encoder->cal_speed.t_method.ts_sigma >= encoder->cfg->timeout_s) {
@@ -151,10 +146,10 @@ hpm_mcl_stat_t hpm_mcl_encoder_process(mcl_encoder_t *encoder, uint32_t tick_det
         break;
     case encoder_method_m_t:
         ts = tick_deta / (*encoder->mcu_clock_tick);
-        theta_deta = MCL_ANGLE_MOD_X((-MCL_PI), MCL_PI, (theta - encoder->cal_speed.m_t_method.theta_last));
+        theta_delta = MCL_GET_ANGLE_DELTA((theta - encoder->cal_speed.m_t_method.theta_last), MCL_2PI);
         encoder->cal_speed.m_t_method.ts_sigma += ts;
-        encoder->cal_speed.m_t_method.theta_sigma += theta_deta;
-        if (fabs(encoder->cal_speed.m_t_method.speed_filter_last) > encoder->cfg->speed_abs_switch_m_t) {
+        encoder->cal_speed.m_t_method.theta_sigma += theta_delta;
+        if ((float)fabs((double)encoder->cal_speed.m_t_method.speed_filter_last) > encoder->cfg->speed_abs_switch_m_t) {
             speed = encoder->cal_speed.m_t_method.theta_sigma / encoder->cal_speed.m_t_method.ts_sigma;
             encoder->cal_speed.m_t_method.ts_sigma = 0;
             encoder->cal_speed.m_t_method.theta_sigma = 0;
@@ -171,9 +166,9 @@ hpm_mcl_stat_t hpm_mcl_encoder_process(mcl_encoder_t *encoder, uint32_t tick_det
         encoder->cal_speed.m_t_method.theta_last = theta;
         break;
     case encoder_method_pll:
-        theta_deta = sinf(theta) * cosf(encoder->cal_speed.pll_method.theta_last) - cosf(theta) * sinf(encoder->cal_speed.pll_method.theta_last);
-        encoder->cal_speed.pll_method.pi_integrator += theta_deta * encoder->cal_speed.pll_method.cfg->ki;
-        speed = theta_deta * encoder->cal_speed.pll_method.cfg->kp + encoder->cal_speed.pll_method.pi_integrator;
+        theta_delta = sinf(theta) * cosf(encoder->cal_speed.pll_method.theta_last) - cosf(theta) * sinf(encoder->cal_speed.pll_method.theta_last);
+        encoder->cal_speed.pll_method.pi_integrator += theta_delta * encoder->cal_speed.pll_method.cfg->ki;
+        speed = theta_delta * encoder->cal_speed.pll_method.cfg->kp + encoder->cal_speed.pll_method.pi_integrator;
         theta_integrator = speed * (*encoder->cal_speed.pll_method.period_call_time_s) + encoder->cal_speed.pll_method.theta_last;
         theta_integrator = MCL_ANGLE_MOD_X(0, 2 * MCL_PI, theta_integrator);
         encoder->cal_speed.pll_method.theta_last = theta_integrator;
@@ -220,7 +215,16 @@ float hpm_mcl_encoder_get_raw_theta(mcl_encoder_t *encoder)
 
 float hpm_mcl_encoder_get_theta(mcl_encoder_t *encoder)
 {
-    return encoder->result.theta;
+    if ((encoder->sensorless.enable != NULL) && (*encoder->sensorless.enable == true)) {
+        return *encoder->sensorless.theta;
+    } else {
+        return encoder->result.theta;
+    }
+}
+
+float hpm_mcl_encoder_get_sensorless_theta(mcl_encoder_t *encoder)
+{
+    return *encoder->sensorless.theta;
 }
 
 float hpm_mcl_encoder_get_speed(mcl_encoder_t *encoder)
@@ -236,5 +240,11 @@ float hpm_mcl_encoder_get_forecast_theta(mcl_encoder_t *encoder)
 hpm_mcl_stat_t hpm_mcl_encoder_get_absolute_theta(mcl_encoder_t *encoder, float *theta)
 {
     MCL_ASSERT(encoder->cfg->callback.get_absolute_theta(theta) == mcl_success, mcl_encoder_get_theta_error);
+    return mcl_success;
+}
+
+hpm_mcl_stat_t hpm_mcl_encoder_get_uvw_status(mcl_encoder_t *encoder, mcl_encoder_uvw_level_t *level)
+{
+    MCL_ASSERT(encoder->cfg->callback.get_uvw_level(level) == mcl_success, mcl_encoder_get_uvw_error);
     return mcl_success;
 }

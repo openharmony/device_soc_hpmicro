@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 HPMicro
+ * Copyright (c) 2023-2025 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -10,6 +10,7 @@
 #include "hpm_mcl_cfg.h"
 #include "hpm_mcl_physical.h"
 #include "hpm_mcl_math.h"
+#include "stdio.h"
 
 typedef uint32_t hpm_mcl_stat_t;
 
@@ -31,12 +32,14 @@ typedef struct {
 } mcl_user_value_t;
 
 enum {
-    mcl_success = MAKE_STATUS(status_group_common, 0),
-    mcl_fail = MAKE_STATUS(status_group_common, 1),
-    mcl_invalid_argument = MAKE_STATUS(status_group_common, 2),
-    mcl_invalid_pointer = MAKE_STATUS(status_group_common, 3),
-    mcl_timeout = MAKE_STATUS(status_group_common, 4),
-    mcl_in_development = MAKE_STATUS(status_group_common, 5),   /**< Functions under development */
+    mcl_success = MAKE_STATUS(mcl_group_common, 0),
+    mcl_fail = MAKE_STATUS(mcl_group_common, 1),
+    mcl_invalid_argument = MAKE_STATUS(mcl_group_common, 2),
+    mcl_invalid_pointer = MAKE_STATUS(mcl_group_common, 3),
+    mcl_timeout = MAKE_STATUS(mcl_group_common, 4),
+    mcl_in_development = MAKE_STATUS(mcl_group_common, 5),   /**< Functions under development */
+    mcl_running = MAKE_STATUS(mcl_group_common, 6),
+    mcl_not_supported = MAKE_STATUS(mcl_group_common, 7),  /**< Not supported peripheral */
 };
 
 
@@ -46,8 +49,10 @@ enum {
  */
 void mcl_user_delay_us(uint64_t tick);
 
-#define MCL_PI (3.1415926535f)
-#define MCL_2PI (2.0f * MCL_PI)
+#define MCL_DEBUG printf
+#define MCL_PI  HPM_PI_FLOAT
+#define MCL_2PI HPM_2_PI_FLOAT
+#define MCL_PI_DIV3 (MCL_PI / 3.0f)
 
 #define MCL_DELAY_US(x) mcl_user_delay_us(x)
 #define MCL_DELAY_MS(x) MCL_DELAY_US(1000*x)
@@ -57,6 +62,7 @@ void mcl_user_delay_us(uint64_t tick);
     do {    \
         if (!b) {   \
             code_extend; \
+            MCL_DEBUG("errcode:%d, file:%s, line:%d.\r\n", errcode, __FILE__, __LINE__);  \
             return errcode;    \
         }   \
     } while (0)
@@ -124,9 +130,15 @@ void mcl_user_delay_us(uint64_t tick);
 ({    \
     float val_; \
     if ((val) > up) { \
-        val_ = (val) - (up - down);    \
+        val_ = (val); \
+        do {  \
+            val_ = (val_) - (up - down);    \
+        } while ((val_) > up); \
     } else if ((val) < down) {    \
-        val_ = (val) + (up - down);   \
+        val_ = (val); \
+        do {  \
+            val_ = (val_) + (up - down);   \
+        } while ((val_) < down); \
     } else {    \
         val_ = (val); \
     }   \
@@ -134,11 +146,36 @@ void mcl_user_delay_us(uint64_t tick);
 })
 
 /**
- * @brief Determine if a floating point number is 0
+ * @brief Calculate the difference in angle,
+ * because the angle is then changed between 0-360 degrees,
+ * there are 350 degrees to 0 degrees of the process of change,
+ * as well as 10 degrees to 360 degrees of the process of change,
+ * in this process, the actual angle change is 10 degrees,
+ * but it may be calculated as 350 degrees,
+ * so the role of the calculation is to strive for an angle value of 10 degrees,
+ * the offset value of the maximum angle value, the default is 2pi
  *
  */
-#define MCL_FLOAT_IS_ZERO(val)  ((val < 0.000001) && (val > -0.000001))
-
+#define MCL_GET_ANGLE_DELTA(val, offset)  \
+({    \
+    float val_; \
+    float temp; \
+    val_ = 0;   \
+    temp = 0;   \
+    if ((val) > 0) { \
+        temp = (val) - offset;    \
+    } else if ((val) < 0) {    \
+        temp = (val) + offset;   \
+    } else {    \
+        val_ = 0; \
+    }   \
+    if (fabs(val) < fabs(temp)) { \
+        val_ = val; \
+    } else {\
+        val_ = temp; \
+    } \
+    (val_);  \
+})
 
 /**
  * @brief Data Range Limits
@@ -158,6 +195,46 @@ void mcl_user_delay_us(uint64_t tick);
  *
  */
 #define MCL_GET_ADC_12BIT_VALID_DATA(x)             ((x & 0xffff) >> 4)
+
+
+/**
+ * @brief Macro to convert microseconds period to frequency in Hertz. The macro takes an unsigned integer representing a time period in microseconds,
+ * and returns the corresponding frequency as a floating-point number.
+ *
+ */
+#define MCL_USEC_TO_HZ(usec) (1000000.0f / (usec))
+
+/**
+ * @brief Macro to convert a time period in seconds to frequency in Hertz (Hz). The macro takes a floating-point number representing a time period in seconds,
+ * and returns the corresponding frequency as a floating-point number.
+ */
+#define MCL_PERIOD_TO_FREQUENCY(period) (1.0f / (period))
+
+
+/**
+ * @brief Macro to convert a frequency in Hertz (Hz) to a time period in seconds. The macro takes a floating-point number representing a frequency in Hertz
+ *
+ */
+#define MCL_FREQUENCY_TO_PERIOD(frequency) (1.0f / (frequency))
+
+/**
+ * @brief Converts microseconds (us) to seconds (s).
+ *
+ * This macro takes an unsigned integer or floating-point number representing
+ * a time period in microseconds and returns the corresponding time period as
+ * a floating-point number in seconds.
+ *
+ */
+#define MCL_USEC_TO_SEC(usec) ((usec) / 1000000.0f)
+
+/**
+ * @brief Converts microseconds (us) to milliseconds (ms).
+ *
+ * This macro takes an unsigned integer or floating-point number representing
+ * a time period in microseconds and returns the corresponding time period as
+ * a floating-point number in milliseconds.
+ */
+#define MCL_USEC_TO_MSEC(usec) ((usec) / 1000.0f)
 
 typedef struct {
     mcl_physical_para_t physical;

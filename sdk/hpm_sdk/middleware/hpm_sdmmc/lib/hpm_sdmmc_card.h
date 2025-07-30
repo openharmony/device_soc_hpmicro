@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 HPMicro
+ * Copyright (c) 2021-2024 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -117,6 +117,10 @@ enum {
     emmc_cmd_execute_read_task = 46,
     emmc_cmd_execute_write_task = 47,
     emmc_cmd_cmdq_task_mgmt = 48,
+
+    sdio_cmd_io_send_op_cond = 5,
+    sdio_cmd_io_rw_direct = 52,
+    sdio_cmd_io_rw_extend = 53,
 };
 
 
@@ -156,7 +160,7 @@ typedef union {
 } sdmmc_r1_status_t;
 
 /**
- * @brief SD Card Satus Register Information
+ * @brief SD Card Status Register Information
  */
 typedef struct {
     uint8_t bus_width;
@@ -299,7 +303,9 @@ typedef enum {
  * @brief Dummy Byte for SD when Card works in SPI mode
  */
 #define SPISD_DUMMY_BYTE                  0xFFU
-
+#define SPISD_START_TOKEN                 0xFEU
+#define SPISD_START_MULTI_WRITE_TOKEN     0xFCU
+#define SPISD_END_MULTI_WRITE_TOKEN       0xFDU
 /**
  * @brief sdcard block size in SPI mode
  */

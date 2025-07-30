@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 HPMicro
+ * Copyright (c) 2021-2025 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,7 @@
 
 #include "hpm_sdmmc_emmc.h"
 #include "hpm_l1c_drv.h"
+#include "hpm_clock_drv.h"
 
 #define SPEED_1Kbps (1000U)
 #define SPEED_1Mbps (1000UL * 1000UL)
@@ -61,33 +62,33 @@ static hpm_stat_t emmc_send_csd(emmc_card_t *card);
 static hpm_stat_t emmc_send_ext_csd(emmc_card_t *card);
 
 /* Decode Extend CSD */
-static hpm_stat_t emmc_decode_ext_csd(emmc_card_t *card, emmc_ext_csd_t *ext_csd);
+static hpm_stat_t emmc_decode_ext_csd(emmc_card_t *card, const emmc_ext_csd_t *ext_csd);
 
 /* Polling Card Status register when the card is busy */
 static hpm_stat_t emmc_polling_card_status_busy(emmc_card_t *card, uint32_t timeout_ms);
 
 /* Send OP Condition command */
-static hpm_stat_t emmc_send_op_cond(emmc_card_t *card, emmc_ocr_t ocr);
+static hpm_stat_t emmc_send_op_cond(const emmc_card_t *card, emmc_ocr_t ocr);
 
 /* Decode CSD register */
-static void emmc_decode_csd(emmc_card_t *card, uint32_t *raw_csd);
+static void emmc_decode_csd(emmc_card_t *card, const uint32_t *raw_csd);
 
 /* Set eMMC Bus Width */
-static hpm_stat_t emmc_set_bus_width(emmc_card_t *card, emmc_bus_mode_t bus_mode);
+static hpm_stat_t emmc_set_bus_width(const emmc_card_t *card, emmc_bus_mode_t bus_mode);
 
 /* Set eMMC HS Timing */
 static hpm_stat_t emmc_set_hs_timing(emmc_card_t *card, emmc_hs_timing_t timing);
 
 /* Check  */
-static hpm_stat_t emmc_check_card_parameters(emmc_card_t *card);
+static hpm_stat_t emmc_check_card_parameters(const emmc_card_t *card);
 
-static hpm_stat_t emmc_error_recovery(emmc_card_t *card);
+static hpm_stat_t emmc_error_recovery(const emmc_card_t *card);
 
-static hpm_stat_t emmc_send_cmd(emmc_card_t *card, sdmmchost_cmd_t *cmd);
+static hpm_stat_t emmc_send_cmd(const emmc_card_t *card, const sdmmchost_cmd_t *cmd);
 
-static hpm_stat_t emmc_transfer(emmc_card_t *card, sdmmchost_xfer_t *content);
+static hpm_stat_t emmc_transfer(const emmc_card_t *card, const sdmmchost_xfer_t *content);
 
-static hpm_stat_t emmc_send_cmd(emmc_card_t *card, sdmmchost_cmd_t *cmd)
+static hpm_stat_t emmc_send_cmd(const emmc_card_t *card, const sdmmchost_cmd_t *cmd)
 {
     hpm_stat_t status = sdmmchost_send_command(card->host, cmd);
 
@@ -100,7 +101,7 @@ static hpm_stat_t emmc_send_cmd(emmc_card_t *card, sdmmchost_cmd_t *cmd)
     return status;
 }
 
-static hpm_stat_t emmc_transfer(emmc_card_t *card, sdmmchost_xfer_t *content)
+static hpm_stat_t emmc_transfer(const emmc_card_t *card, const sdmmchost_xfer_t *content)
 {
     hpm_stat_t status = sdmmchost_transfer(card->host, content);
 
@@ -115,14 +116,12 @@ static hpm_stat_t emmc_transfer(emmc_card_t *card, sdmmchost_xfer_t *content)
 
 static hpm_stat_t emmc_send_card_status(emmc_card_t *card)
 {
-    hpm_stat_t status;
-
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     memset(cmd, 0, sizeof(*cmd));
     cmd->cmd_index = sdmmc_cmd_send_status;
     cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
     cmd->cmd_argument = (uint32_t) card->relative_addr << 16;
-    status = emmc_send_cmd(card, cmd);
+    hpm_stat_t status = emmc_send_cmd(card, cmd);
     if (status != status_success) {
         return status;
     }
@@ -132,7 +131,7 @@ static hpm_stat_t emmc_send_card_status(emmc_card_t *card)
     return status;
 }
 
-static hpm_stat_t emmc_send_op_cond(emmc_card_t *card, emmc_ocr_t ocr)
+static hpm_stat_t emmc_send_op_cond(const emmc_card_t *card, emmc_ocr_t ocr)
 {
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     (void) memset(cmd, 0, sizeof(sdmmchost_cmd_t));
@@ -149,7 +148,7 @@ static hpm_stat_t emmc_send_op_cond(emmc_card_t *card, emmc_ocr_t ocr)
     return status_success;
 }
 
-static void emmc_decode_csd(emmc_card_t *card, uint32_t *raw_csd)
+static void emmc_decode_csd(emmc_card_t *card, const uint32_t *raw_csd)
 {
     emmc_csd_t *csd = &card->csd;
 
@@ -250,7 +249,7 @@ static uint32_t emmc_get_24bit_num_from_ext_csd(const uint8_t *array)
     return value;
 }
 
-static hpm_stat_t emmc_decode_ext_csd(emmc_card_t *card, emmc_ext_csd_t *ext_csd)
+static hpm_stat_t emmc_decode_ext_csd(emmc_card_t *card, const emmc_ext_csd_t *ext_csd)
 {
     hpm_stat_t status = status_invalid_argument;
 
@@ -434,7 +433,7 @@ static hpm_stat_t emmc_set_rca(emmc_card_t *card, uint16_t relative_addr)
     return status;
 }
 
-static hpm_stat_t emmc_error_recovery(emmc_card_t *card)
+static hpm_stat_t emmc_error_recovery(const emmc_card_t *card)
 {
     sdmmchost_cmd_t *cmd = &card->host->cmd;
     cmd->cmd_index = sdmmc_cmd_stop_transmission;
@@ -444,7 +443,7 @@ static hpm_stat_t emmc_error_recovery(emmc_card_t *card)
     return sdmmchost_error_recovery(card->host, cmd);
 }
 
-static hpm_stat_t emmc_check_card_parameters(emmc_card_t *card)
+static hpm_stat_t emmc_check_card_parameters(const emmc_card_t *card)
 {
     hpm_stat_t status;
     if ((card == NULL) || (card->host == NULL) || (card->host->host_param.base == NULL)) {
@@ -455,7 +454,7 @@ static hpm_stat_t emmc_check_card_parameters(emmc_card_t *card)
     return status;
 }
 
-static hpm_stat_t emmc_set_bus_width(emmc_card_t *card, emmc_bus_mode_t bus_mode)
+static hpm_stat_t emmc_set_bus_width(const emmc_card_t *card, emmc_bus_mode_t bus_mode)
 {
     emmc_switch_cmd_arg_t switch_arg = {.argument = 0U};
     switch_arg.access = emmc_switch_cmd_access_mode_write_byte;
@@ -465,9 +464,8 @@ static hpm_stat_t emmc_set_bus_width(emmc_card_t *card, emmc_bus_mode_t bus_mode
 
     hpm_stat_t status = emmc_switch_function(card, switch_arg, card->device_attribute.switch_cmd_timeout_ms * 1000U);
 
-    sdmmc_buswidth_t bus_width;
-
     if (status == status_success) {
+        sdmmc_buswidth_t bus_width;
         switch (bus_mode) {
         default:
             bus_width = sdmmc_bus_width_1bit;
@@ -490,7 +488,6 @@ static hpm_stat_t emmc_set_bus_width(emmc_card_t *card, emmc_bus_mode_t bus_mode
 
 static hpm_stat_t emmc_set_hs_timing(emmc_card_t *card, emmc_hs_timing_t timing)
 {
-    hpm_stat_t status;
     uint32_t clock_option;
 
     bool clock_inverse = true;
@@ -531,7 +528,7 @@ static hpm_stat_t emmc_set_hs_timing(emmc_card_t *card, emmc_hs_timing_t timing)
     switch_arg.access = emmc_switch_cmd_access_mode_write_byte;
     switch_arg.index = EMMC_EXT_CSD_INDEX_HS_TIMING;
     switch_arg.value = (uint8_t) timing_val;
-    status = emmc_switch_function(card, switch_arg, card->device_attribute.switch_cmd_timeout_ms * 1000U);
+    hpm_stat_t status = emmc_switch_function(card, switch_arg, card->device_attribute.switch_cmd_timeout_ms * 1000U);
     if (status != status_success) {
         return status;
     }
@@ -540,8 +537,6 @@ static hpm_stat_t emmc_set_hs_timing(emmc_card_t *card, emmc_hs_timing_t timing)
     card->host->clock_freq = sdmmchost_set_card_clock(card->host, clock_option, clock_inverse);
     return status;
 }
-
-void emmc_card_deinit(emmc_card_t *card);
 
 hpm_stat_t emmc_host_init(emmc_card_t *card)
 {
@@ -575,7 +570,7 @@ hpm_stat_t emmc_init(emmc_card_t *card)
         card->relative_addr = 0;
         card->current_hs_timing = emmc_timing_legacy;
 
-        card->host->host_param.delay_ms(1); /* Wait a while in case the card connection is still not stable */
+        sdmmchost_delay_ms(card->host, 1); /* Wait a while in case the card connection is still not stable */
 
         status = emmc_card_init(card);
     } while (false);
@@ -585,7 +580,10 @@ hpm_stat_t emmc_init(emmc_card_t *card)
 
 void emmc_deinit(emmc_card_t *card)
 {
-    (void) card;
+    if (card->is_host_ready) {
+        card->is_host_ready = false;
+        sdmmchost_deinit(card->host);
+    }
 }
 
 hpm_stat_t emmc_probe_device(emmc_card_t *card)
@@ -612,6 +610,8 @@ hpm_stat_t emmc_probe_device(emmc_card_t *card)
 
         card->ocr.ocr_word = recv_ocr.ocr_word;
 
+        /* Get the addressing mode */
+        card->is_byte_addressing_mode = (card->ocr.access_mode == 0);
     } while (false);
 
     return status;
@@ -809,12 +809,12 @@ hpm_stat_t emmc_card_init(emmc_card_t *card)
     return status;
 }
 
-bool emmc_is_card_present(emmc_card_t *card)
+bool emmc_is_card_present(const emmc_card_t *card)
 {
     return sdmmchost_is_card_detected(card->host);
 }
 
-hpm_stat_t emmc_select_card(emmc_card_t *card, bool is_selected)
+hpm_stat_t emmc_select_card(const emmc_card_t *card, bool is_selected)
 {
     uint16_t rca = (is_selected) ? card->relative_addr : 0;
     return sdmmc_select_card(card->host, rca, is_selected);
@@ -847,19 +847,34 @@ hpm_stat_t emmc_read_blocks(emmc_card_t *card, uint8_t *buffer, uint32_t start_b
                 cmd->cmd_index = sdmmc_cmd_read_single_block;
             }
             cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
-            cmd->cmd_argument = start_block;
+            uint32_t current_addr = card->is_byte_addressing_mode ?
+                                    start_block * card->device_attribute.sector_size :
+                                    start_block;
+            cmd->cmd_argument = current_addr;
             data->block_size = SDMMC_BLOCK_SIZE_DEFAULT;
             data->block_cnt = read_block_count;
             data->rx_data = (uint32_t *) sdmmc_get_sys_addr(card->host, (uint32_t) buffer);
             content->data = data;
             content->command = cmd;
-            uint32_t aligned_start = HPM_L1C_CACHELINE_ALIGN_DOWN((uint32_t) data->rx_data);
-            uint32_t end_addr = (uint32_t) data->rx_data + card->device_attribute.sector_size * block_count;
+#if !defined(HPM_SDMMC_ENABLE_CACHE_MAINTENANCE) || (HPM_SDMMC_ENABLE_CACHE_MAINTENANCE == 1)
+            uint32_t buf_start = (uint32_t) data->rx_data;
+            uint32_t aligned_start = HPM_L1C_CACHELINE_ALIGN_DOWN(buf_start);
+            uint32_t end_addr = buf_start + card->device_attribute.sector_size * block_count;
             uint32_t aligned_end = HPM_L1C_CACHELINE_ALIGN_UP(end_addr);
             uint32_t aligned_size = aligned_end - aligned_start;
-            l1c_dc_flush(aligned_start, aligned_size);
+            /* FLUSH un-cacheline aligned memory region */
+            if ((buf_start % HPM_L1C_CACHELINE_SIZE) != 0) {
+                l1c_dc_writeback(aligned_start, HPM_L1C_CACHELINE_SIZE);
+            }
+            if ((end_addr % HPM_L1C_CACHELINE_SIZE) != 0) {
+                uint32_t aligned_tail = HPM_L1C_CACHELINE_ALIGN_DOWN(end_addr);
+                l1c_dc_writeback(aligned_tail, HPM_L1C_CACHELINE_SIZE);
+            }
+#endif
             status = emmc_transfer(card, content);
+#if !defined(HPM_SDMMC_ENABLE_CACHE_MAINTENANCE) || (HPM_SDMMC_ENABLE_CACHE_MAINTENANCE == 1)
             l1c_dc_invalidate(aligned_start, aligned_size);
+#endif
             if (status != status_success) {
                 break;
             }
@@ -902,17 +917,22 @@ hpm_stat_t emmc_write_blocks(emmc_card_t *card, const uint8_t *buffer, uint32_t 
                 data->enable_auto_cmd12 = false;
             }
             cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
-            cmd->cmd_argument = start_block;
+            uint32_t current_addr = card->is_byte_addressing_mode ?
+                                    start_block * card->device_attribute.sector_size :
+                                    start_block;
+            cmd->cmd_argument = current_addr;
             data->block_size = SDMMC_BLOCK_SIZE_DEFAULT;
             data->block_cnt = write_block_count;
             data->tx_data = (const uint32_t *) sdmmc_get_sys_addr(card->host, (uint32_t) buffer);
             content->data = data;
             content->command = cmd;
+#if !defined(HPM_SDMMC_ENABLE_CACHE_MAINTENANCE) || (HPM_SDMMC_ENABLE_CACHE_MAINTENANCE == 1)
             uint32_t aligned_start = HPM_L1C_CACHELINE_ALIGN_DOWN((uint32_t) data->tx_data);
             uint32_t aligned_end = HPM_L1C_CACHELINE_ALIGN_UP(
                     (uint32_t) data->tx_data + card->device_attribute.sector_size * write_block_count);
             uint32_t aligned_size = aligned_end - aligned_start;
             l1c_dc_flush(aligned_start, aligned_size);
+#endif
             status = emmc_transfer(card, content);
             if (status != status_success) {
                 break;
@@ -933,7 +953,7 @@ hpm_stat_t emmc_write_blocks(emmc_card_t *card, const uint8_t *buffer, uint32_t 
  * @brief Calculate SD erase timeout value
  * Refer to SD_Specification_Part1_Physical_Layer_Specification_Version4.20.pdf, section 4.14 for more details.
  */
-static uint32_t emmc_calculate_erase_timeout(emmc_card_t *card, uint32_t start_block, uint32_t block_count)
+static uint32_t emmc_calculate_erase_timeout(const emmc_card_t *card, uint32_t start_block, uint32_t block_count)
 {
     (void) start_block;
     uint32_t erase_timeout;
@@ -964,7 +984,10 @@ hpm_stat_t emmc_erase_blocks(emmc_card_t *card,
         uint32_t erase_timeout = emmc_calculate_erase_timeout(card, start_block, block_count);
         /* Send erase start */
         cmd->cmd_index = emmc_cmd_erase_group_start;
-        cmd->cmd_argument = start_block;
+        uint32_t current_addr = card->is_byte_addressing_mode ?
+                                    start_block * card->device_attribute.sector_size :
+                                    start_block;
+        cmd->cmd_argument = current_addr;
         cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1;
         status = emmc_send_cmd(card, cmd);
         HPM_BREAK_IF(status != status_success);
@@ -1006,6 +1029,8 @@ hpm_stat_t emmc_polling_card_status_busy(emmc_card_t *card, uint32_t timeout_ms)
 {
     hpm_stat_t status = status_invalid_argument;
     bool is_busy = true;
+    volatile uint64_t start_tick = hpm_csr_get_core_mcycle();
+    uint64_t timeout_ms_in_ticks = (uint64_t) timeout_ms * (clock_get_frequency(clock_cpu0) / 1000UL);
     do {
         HPM_BREAK_IF((card == NULL) || (card->host == NULL));
 
@@ -1016,8 +1041,10 @@ hpm_stat_t emmc_polling_card_status_busy(emmc_card_t *card, uint32_t timeout_ms)
         if ((card->current_r1_status.current_state == sdmmc_state_program) ||
             (card->current_r1_status.ready_for_data == 0U)) {
             is_busy = true;
-            card->host->host_param.delay_ms(1);
-            timeout_ms--;
+            uint64_t current_tick = hpm_csr_get_core_mcycle();
+            if (current_tick - start_tick > timeout_ms_in_ticks) {
+                break;
+            }
         } else {
             is_busy = false;
         }
@@ -1031,7 +1058,7 @@ hpm_stat_t emmc_polling_card_status_busy(emmc_card_t *card, uint32_t timeout_ms)
     return status;
 }
 
-hpm_stat_t emmc_switch_function(emmc_card_t *card, emmc_switch_cmd_arg_t arg, uint32_t timeout_us)
+hpm_stat_t emmc_switch_function(const emmc_card_t *card, emmc_switch_cmd_arg_t arg, uint32_t timeout_us)
 {
     hpm_stat_t error = status_invalid_argument;
     do {
@@ -1044,6 +1071,109 @@ hpm_stat_t emmc_switch_function(emmc_card_t *card, emmc_switch_cmd_arg_t arg, ui
         cmd->cmd_argument = arg.argument;
         cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1b;
         cmd->cmd_timeout_ms = (timeout_us + 999) / 1000;
+        error = emmc_send_cmd(card, cmd);
+
+    } while (false);
+
+    return error;
+}
+
+hpm_stat_t emmc_configure_partition(const emmc_card_t *card, emmc_config_partition_option_t option)
+{
+    uint8_t partition_config = 0U;
+
+    if (option.enable_boot_ack) {
+        partition_config |= (1UL << 6);
+    }
+
+    switch (option.boot_partition_enable_option) {
+    default:
+        /* Do nothing */
+        break;
+    case boot_partition_enable_option_boot_partition1:
+        partition_config |= (1UL << 3);
+        break;
+    case boot_partition_enable_option_boot_partition2:
+        partition_config |= (2UL << 3);
+        break;
+    case boot_partition_enable_option_user_area:
+        partition_config |= (7UL << 3);
+        break;
+    }
+
+    switch (option.partition_access_option) {
+    default:
+        /* Do nothing */
+        break;
+    case emmc_partition_access_read_or_write_boot_partition1:
+        partition_config |= (1UL << 0);
+        break;
+    case emmc_partition_access_read_or_write_boot_partition2:
+        partition_config |= (2UL << 0);
+        break;
+    case emmc_partition_access_read_or_write_rpmb:
+        partition_config |= (3UL << 0);
+        break;
+    case emmc_partition_access_access_to_gp_partition1:
+        partition_config |= (4UL << 0);
+        break;
+    case emmc_partition_access_access_to_gp_partition2:
+        partition_config |= (5UL << 0);
+        break;
+    case emmc_partition_access_access_to_gp_partition3:
+        partition_config |= (6UL << 0);
+        break;
+    case emmc_partition_access_access_to_gp_partition4:
+        partition_config |= (7UL << 0);
+        break;
+    }
+
+    emmc_switch_cmd_arg_t switch_arg = { .argument = 0U };
+    switch_arg.access = emmc_switch_cmd_access_mode_write_byte;
+    switch_arg.index = EMMC_EXT_CSD_INDEX_PARTITION_CONFIG;
+    switch_arg.value = partition_config;
+
+    uint32_t timeout_in_us = card->device_attribute.partition_switch_timeout_ms * 1000UL;
+    return emmc_switch_function(card, switch_arg, timeout_in_us);
+}
+
+hpm_stat_t emmc_enter_sleep_mode(const emmc_card_t *card)
+{
+    hpm_stat_t error = status_invalid_argument;
+    do {
+        HPM_BREAK_IF(card == NULL);
+
+        sdmmchost_cmd_t *cmd = &card->host->cmd;
+        (void) memset(cmd, 0, sizeof(sdmmchost_cmd_t));
+
+        cmd->cmd_index = emmc_cmd_sleep_awake;
+        cmd->cmd_argument = ((uint32_t)card->relative_addr << 16) | (1UL << 15);
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1b;
+        /* Calculate the command timeout in ms, see 7.4.50 section in JESD84-B51A for more details */
+        uint32_t timeout_in_ns = 100UL * (1UL << card->ext_csd.sleep_or_awake_timeout);
+        cmd->cmd_timeout_ms =  (timeout_in_ns + 999999UL) / 1000000UL;
+        error = emmc_send_cmd(card, cmd);
+
+    } while (false);
+
+    return error;
+}
+
+hpm_stat_t emmc_exit_sleep_mode(const emmc_card_t *card)
+{
+    hpm_stat_t error = status_invalid_argument;
+    do {
+        HPM_BREAK_IF(card == NULL);
+
+        sdmmchost_cmd_t *cmd = &card->host->cmd;
+        (void) memset(cmd, 0, sizeof(sdmmchost_cmd_t));
+
+        cmd->cmd_index = emmc_cmd_sleep_awake;
+        cmd->cmd_argument = ((uint32_t)card->relative_addr << 16);
+        cmd->resp_type = (sdxc_dev_resp_type_t) sdmmc_resp_r1b;
+        /* Calculate the command timeout in ms, see 7.4.50 section in JESD84-B51A for more details */
+        uint32_t timeout_in_ns = 100UL * (1UL << card->ext_csd.sleep_or_awake_timeout);
+        cmd->cmd_timeout_ms =  (timeout_in_ns + 999999UL) / 1000000UL;
         error = emmc_send_cmd(card, cmd);
 
     } while (false);
