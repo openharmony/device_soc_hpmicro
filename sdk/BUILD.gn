@@ -22,6 +22,7 @@ kernel_module(module_name) {
   ]
 
   sources = [ 
+    "${hpm_sdk_path}/arch/riscv/l1c/hpm_l1c_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_uart_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_gpio_drv.c",
     "${hpm_sdk_path}/drivers/src/hpm_mchtmr_drv.c",
@@ -33,78 +34,15 @@ kernel_module(module_name) {
   
   if (defined(LOSCFG_SOC_HPM6750)) {
     sources += [
-      "${hpm_sdk_path}/soc/HPM6750/toolchains/reset.c",
-      "${hpm_sdk_path}/soc/HPM6750/boot/hpm_bootheader.c",
-      "${hpm_sdk_path}/soc/HPM6750/hpm_sysctl_drv.c",
-      "${hpm_sdk_path}/soc/HPM6750/system.c",
-      "${hpm_sdk_path}/soc/HPM6750/hpm_l1c_drv.c",
-      "${hpm_sdk_path}/soc/HPM6750/hpm_otp_drv.c",
-      "${hpm_sdk_path}/soc/HPM6750/hpm_clock_drv.c",
+      "${hpm_sdk_path}/soc/HPM6700/HPM6750/toolchains/reset.c",
+      "${hpm_sdk_path}/soc/HPM6700/HPM6750/boot/hpm_bootheader.c",
+      "${hpm_sdk_path}/soc/HPM6700/HPM6750/hpm_sysctl_drv.c",
+      "${hpm_sdk_path}/soc/HPM6700/HPM6750/system.c",
+      "${hpm_sdk_path}/soc/HPM6700/HPM6750/hpm_otp_drv.c",
+      "${hpm_sdk_path}/soc/HPM6700/HPM6750/hpm_clock_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_pllctl_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
       "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM6360)) {
-    sources += [
-      "${hpm_sdk_path}/soc/HPM6360/toolchains/reset.c",
-      "${hpm_sdk_path}/soc/HPM6360/boot/hpm_bootheader.c",
-      "${hpm_sdk_path}/soc/HPM6360/hpm_sysctl_drv.c",
-      "${hpm_sdk_path}/soc/HPM6360/system.c",
-      "${hpm_sdk_path}/soc/HPM6360/hpm_l1c_drv.c",
-      "${hpm_sdk_path}/soc/HPM6360/hpm_otp_drv.c",
-      "${hpm_sdk_path}/soc/HPM6360/hpm_clock_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM6880)) {
-    sources += [
-      "${hpm_sdk_path}/soc/HPM6880/toolchains/reset.c",
-      "${hpm_sdk_path}/soc/HPM6880/boot/hpm_bootheader.c",
-      "${hpm_sdk_path}/soc/HPM6880/hpm_sysctl_drv.c",
-      "${hpm_sdk_path}/soc/HPM6880/system.c",
-      "${hpm_sdk_path}/soc/HPM6880/hpm_l1c_drv.c",
-      "${hpm_sdk_path}/soc/HPM6880/hpm_otp_drv.c",
-      "${hpm_sdk_path}/soc/HPM6880/hpm_clock_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_enet_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_ewdg_drv.c",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM6280)) {
-    sources += [
-      "${hpm_sdk_path}/soc/HPM6280/toolchains/reset.c",
-      "${hpm_sdk_path}/soc/HPM6280/boot/hpm_bootheader.c",
-      "${hpm_sdk_path}/soc/HPM6280/hpm_sysctl_drv.c",
-      "${hpm_sdk_path}/soc/HPM6280/system.c",
-      "${hpm_sdk_path}/soc/HPM6280/hpm_l1c_drv.c",
-      "${hpm_sdk_path}/soc/HPM6280/hpm_otp_drv.c",
-      "${hpm_sdk_path}/soc/HPM6280/hpm_clock_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_wdg_drv.c",
-    ]
-  }
-  
-  if (defined(LOSCFG_SOC_HPM5300)) {
-    sources += [
-      "${hpm_sdk_path}/soc/HPM5361/toolchains/reset.c",
-      "${hpm_sdk_path}/soc/HPM5361/boot/hpm_bootheader.c",
-      "${hpm_sdk_path}/soc/HPM5361/hpm_sysctl_drv.c",
-      "${hpm_sdk_path}/soc/HPM5361/system.c",
-      "${hpm_sdk_path}/soc/HPM5361/hpm_l1c_drv.c",
-      "${hpm_sdk_path}/soc/HPM5361/hpm_otp_drv.c",
-      "${hpm_sdk_path}/soc/HPM5361/hpm_clock_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pllctlv2_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_pcfg_drv.c",
-      "${hpm_sdk_path}/drivers/src/hpm_ewdg_drv.c",
     ]
   }
 
@@ -119,42 +57,15 @@ kernel_module(module_name) {
 config("public") {
   include_dirs = [
     "${hpm_sdk_path}/drivers/inc",
-    "${hpm_sdk_path}/soc/ip",
     "${hpm_sdk_path}/arch",
+    "${hpm_sdk_path}/arch/riscv/l1c",
   ]
 
   if (defined(LOSCFG_SOC_HPM6750)) {
     include_dirs += [ 
-        "${hpm_sdk_path}/soc/HPM6750",
-        "${hpm_sdk_path}/soc/HPM6750/boot",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM6360)) {
-    include_dirs += [ 
-        "${hpm_sdk_path}/soc/HPM6360",
-        "${hpm_sdk_path}/soc/HPM6360/boot",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM6880)) {
-    include_dirs += [
-        "${hpm_sdk_path}/soc/HPM6880",
-        "${hpm_sdk_path}/soc/HPM6880/boot",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM6280)) {
-    include_dirs += [ 
-        "${hpm_sdk_path}/soc/HPM6280",
-        "${hpm_sdk_path}/soc/HPM6280/boot",
-    ]
-  }
-
-  if (defined(LOSCFG_SOC_HPM5300)) {
-    include_dirs += [ 
-        "${hpm_sdk_path}/soc/HPM5361",
-        "${hpm_sdk_path}/soc/HPM5361/boot",
+        "${hpm_sdk_path}/soc/HPM6700/ip",
+        "${hpm_sdk_path}/soc/HPM6700/HPM6750",
+        "${hpm_sdk_path}/soc/HPM6700/HPM6750/boot",
     ]
   }
 
